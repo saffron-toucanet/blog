@@ -15,6 +15,11 @@ type PageMeta = {
   canonicalPath: string;
   noindex?: boolean;
   home?: boolean;
+  /** Open Graph type; posts use `article`. */
+  ogType?: "website" | "article";
+  /** ISO date (YYYY-MM-DD) for article:published_time. */
+  publishedTime?: string;
+  tags?: string[];
 };
 
 type PostNeighbors = {
@@ -58,6 +63,8 @@ function layout(meta: PageMeta, body: string): string {
   const homeHref = withBase("/");
   const tagsHref = withBase("/tags/");
   const feedHref = withBase("/feed.xml");
+  const faviconHref = withBase("/favicon.svg");
+  const ogImage = absoluteUrl("/images/og-default.svg");
   const serifHref = withBase("/fonts/source-serif-4-latin-wght-normal.woff2");
   const sansHref = withBase("/fonts/source-sans-3-latin-wght-normal.woff2");
   const path = meta.canonicalPath;
@@ -66,6 +73,19 @@ function layout(meta: PageMeta, body: string): string {
   const robots = meta.noindex
     ? `\n  <meta name="robots" content="noindex">`
     : "";
+  const ogType = meta.ogType ?? "website";
+  const articleMeta =
+    ogType === "article"
+      ? [
+          meta.publishedTime
+            ? `\n  <meta property="article:published_time" content="${escapeAttr(meta.publishedTime)}">`
+            : "",
+          ...(meta.tags ?? []).map(
+            (tag) =>
+              `\n  <meta property="article:tag" content="${escapeAttr(tag)}">`,
+          ),
+        ].join("")
+      : "";
 
   const bodyClass = meta.home ? ' class="home"' : "";
 
@@ -79,12 +99,15 @@ function layout(meta: PageMeta, body: string): string {
   <title>${escapeHtml(pageTitle)}</title>
   <meta name="description" content="${escapeAttr(description)}">${robots}
   <link rel="canonical" href="${escapeAttr(canonical)}">
+  <link rel="icon" href="${escapeAttr(faviconHref)}" type="image/svg+xml">
   <link rel="alternate" type="application/rss+xml" title="${escapeAttr(SITE_TITLE)}" href="${escapeAttr(feedHref)}">
   <meta property="og:title" content="${escapeAttr(pageTitle)}">
   <meta property="og:description" content="${escapeAttr(description)}">
   <meta property="og:url" content="${escapeAttr(canonical)}">
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="${escapeAttr(ogType)}">
   <meta property="og:site_name" content="${escapeAttr(SITE_TITLE)}">
+  <meta property="og:image" content="${escapeAttr(ogImage)}">
+  <meta name="twitter:card" content="summary_large_image">${articleMeta}
   <link rel="preload" href="${escapeAttr(serifHref)}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="${escapeAttr(sansHref)}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="${escapeAttr(cssHref)}">
@@ -163,10 +186,15 @@ function postListItem(post: Post): string {
 </li>`;
 }
 
+function sortPosts(posts: Post[]): Post[] {
+  return [...posts].sort((a, b) => {
+    const byDate = (b.date ?? "").localeCompare(a.date ?? "");
+    return byDate !== 0 ? byDate : a.slug.localeCompare(b.slug);
+  });
+}
+
 export function renderIndexPage(posts: Post[]): string {
-  const sorted = [...posts].sort((a, b) =>
-    (b.date ?? "").localeCompare(a.date ?? ""),
-  );
+  const sorted = sortPosts(posts);
   const list =
     sorted.length === 0
       ? "<p>No posts yet.</p>"
@@ -219,15 +247,16 @@ ${post.bodyHtml}
       title: post.title,
       description: post.description || SITE_DESCRIPTION,
       canonicalPath: postPath(post.slug),
+      ogType: "article",
+      publishedTime: post.date,
+      tags: post.tags,
     },
     body,
   );
 }
 
 export function renderTagPage(tag: string, posts: Post[]): string {
-  const sorted = [...posts].sort((a, b) =>
-    (b.date ?? "").localeCompare(a.date ?? ""),
-  );
+  const sorted = sortPosts(posts);
   const slug = tagSlug(tag);
   const list = `<ul class="post-list">\n${sorted.map(postListItem).join("\n")}\n</ul>`;
   const body = `    <h1>Tag: ${escapeHtml(tag)}</h1>

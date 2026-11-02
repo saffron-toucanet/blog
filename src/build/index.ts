@@ -75,12 +75,32 @@ function writePage(dir: string, html: string): void {
   fs.writeFileSync(path.join(dir, "index.html"), html, "utf8");
 }
 
+/** Include draft posts when INCLUDE_DRAFTS=1/true or `--drafts` is passed. */
+function includeDrafts(): boolean {
+  const env = process.env.INCLUDE_DRAFTS?.trim().toLowerCase();
+  if (env === "1" || env === "true" || env === "yes") return true;
+  return process.argv.includes("--drafts");
+}
+
 function loadAllPosts(): Post[] {
   if (!fs.existsSync(POSTS_DIR)) return [];
   return fs
     .readdirSync(POSTS_DIR)
     .filter((f) => f.endsWith(".md"))
     .map((filename) => loadPost(path.join(POSTS_DIR, filename), filename));
+}
+
+function assertUniqueSlugs(posts: Post[]): void {
+  const seen = new Map<string, string>();
+  for (const post of posts) {
+    const prior = seen.get(post.slug);
+    if (prior) {
+      throw new Error(
+        `Duplicate post slug "${post.slug}" from ${prior} and ${post.filename}`,
+      );
+    }
+    seen.set(post.slug, post.filename);
+  }
 }
 
 function buildTagMap(posts: Post[]): Map<string, { label: string; posts: Post[] }> {
@@ -115,10 +135,17 @@ export function build(): void {
   console.log(`Wrote CNAME → dist/CNAME (${customDomain})`);
 
   const allPosts = loadAllPosts();
-  const drafts = allPosts.filter((p) => p.draft);
-  const posts = allPosts.filter((p) => !p.draft);
+  assertUniqueSlugs(allPosts);
 
-  if (drafts.length > 0) {
+  const drafts = allPosts.filter((p) => p.draft);
+  const keepDrafts = includeDrafts();
+  const posts = keepDrafts ? allPosts : allPosts.filter((p) => !p.draft);
+
+  if (keepDrafts && drafts.length > 0) {
+    console.log(
+      `Including ${drafts.length} draft post(s): ${drafts.map((p) => p.slug).join(", ")}`,
+    );
+  } else if (drafts.length > 0) {
     console.log(
       `Skipped ${drafts.length} draft post(s): ${drafts.map((p) => p.slug).join(", ")}`,
     );

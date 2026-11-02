@@ -8,6 +8,7 @@ Plain TypeScript build → static HTML/CSS. No runtime frameworks. Deployed to G
 
 ```bash
 npm install
+npm run typecheck
 npm run build
 ```
 
@@ -18,6 +19,25 @@ Preview once:
 ```bash
 npx serve dist
 ```
+
+CI runs `typecheck` then `build` on every PR; production builds never include drafts.
+
+### Drafts (local preview)
+
+Production and CI skip `draft: true` posts. For local preview of drafts:
+
+```bash
+INCLUDE_DRAFTS=1 npm run build
+# or
+npm run build -- --drafts
+INCLUDE_DRAFTS=1 npm run dev
+```
+
+### Markdown safety
+
+The generator **strips raw HTML** in Markdown and **rejects** `javascript:` / `data:` / `vbscript:` / `file:` URLs in links and images. Site-absolute paths (`/images/…`) are rewritten with `BASE_PATH`. Treat post content as trusted after this sanitize step (single-author workflow).
+
+The build **fails** on duplicate slugs and on tags that slugify to an empty string.
 
 ## Dev (watch)
 
@@ -44,7 +64,7 @@ Open http://127.0.0.1:4173/ (override with `PORT=…`).
    ---
    ```
 
-2. Write the Markdown body.
+2. Write the Markdown body (no raw HTML; use normal Markdown links/images).
 3. Run `npm run build` (or `npm run dev`), or push to `main` and let CI deploy.
 4. Open `dist/posts/<slug>/` (or the live URL after deploy).
 
@@ -69,13 +89,13 @@ Set `draft: true` to keep a post out of the index, tags, feed, sitemap, and Page
 
 ## Deploy (GitHub Pages + Cloudflare)
 
-CI: on PRs, `npm ci` + `npm run build`; on push to `main`, also upload `dist/` and deploy Pages.
+CI: on PRs, `npm ci` + `npm run typecheck` + `npm run build`; on push to `main`, also upload `dist/` and deploy Pages. Workflow permissions default to `contents: read`; `pages`/`id-token` are granted only on the deploy job. Concurrency is scoped to deploy so PR builds do not serialize with production deploys.
 
 ### One-time GitHub repo settings
 
 1. **Settings → Pages → Build and deployment → Source:** GitHub Actions.
 2. After the first successful deploy (or once DNS is ready): **Settings → Pages → Custom domain** → `blog.doxiebytes.com` → Save.
-3. Wait for DNS check to pass, then enable **Enforce HTTPS**.
+3. Wait for DNS check to pass, then enable **Enforce HTTPS** (manual Pages setting — not controllable from this repo). Verify `http://blog.doxiebytes.com/` redirects to `https://`.
 
 The build writes `dist/CNAME` with `blog.doxiebytes.com` so Pages keeps the custom domain on each deploy.
 
