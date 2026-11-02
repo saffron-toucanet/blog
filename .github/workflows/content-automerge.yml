@@ -1,0 +1,195 @@
+# Auto-squash-merge PRs that only touch content/ and are authored by an
+# allowlisted login (default: repository owner, saffron-toucanet).
+#
+# Author allowlist: repo variable CONTENT_AUTOMERGE_AUTHORS (comma-separated).
+# When unset, falls back to github.repository_owner.
+#
+# Required repo settings (Settings → General → Pull Requests):
+#   - Allow auto-merge (recommended; queue job uses gh pr merge --auto)
+# Prefer branch protection on main with required check
+#   "Deploy GitHub Pages / build" so merges never land on a red build.
+#
+# Design: pull_request queues GitHub auto-merge (no self-check deadlock).
+# workflow_run merges after Deploy GitHub Pages succeeds as a fallback when
+# Allow auto-merge is off or no required checks are configured.
+name: Content auto-merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_run:
+    workflows: ["Deploy GitHub Pages"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+concurrency:
+  group: content-automerge-${{ github.event.pull_request.number || github.event.workflow_run.head_sha }}
+  cancel-in-progress: true
+
+jobs:
+  # Fast path: enable GitHub auto-merge so required checks gate the squash.
+  queue:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.user.type != 'Bot'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Queue squash auto-merge when eligible
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
+          OWNER: ${{ github.repository_owner }}
+          ALLOWLIST_VAR: ${{ vars.CONTENT_AUTOMERGE_AUTHORS }}
+        run: |
+          set -euo pipefail
+
+          allowlist="${ALLOWLIST_VAR:-$OWNER}"
+          echo "Author filter: allowlist='$allowlist' (default owner='$OWNER'); PR author='$AUTHOR'"
+
+          allowed=false
+          IFS=',' read -ra entries <<< "$allowlist"
+          for entry in "${entries[@]}"; do
+            entry="$(echo "$entry" | tr -d '[:space:]')"
+            if [[ -n "$entry" && "$entry" == "$AUTHOR" ]]; then
+              allowed=true
+              break
+            fi
+          done
+          if [[ "$allowed" != true ]]; then
+            echo "Skip: author '$AUTHOR' not in CONTENT_AUTOMERGE_AUTHORS / owner allowlist"
+            exit 0
+          fi
+
+          mapfile -t files < <(gh pr diff "$PR" --name-only)
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "Skip: no changed files"
+            exit 0
+          fi
+          for f in "${files[@]}"; do
+            case "$f" in
+              content|content/*) ;;
+              *)
+                echo "Skip: non-content path '$f'"
+                exit 0
+                ;;
+            esac
+          done
+          echo "Eligible: ${#files[@]} path(s) under content/"
+
+          # --auto returns once merge is queued; GitHub waits for required checks.
+          # Never --admin / force. If Allow auto-merge is disabled, workflow_run merges later.
+          if gh pr merge "$PR" --squash --auto; then
+            echo "Auto-merge (squash) enabled for #$PR"
+          else
+            echo "Could not enable auto-merge (enable Settings → Allow auto-merge)."
+            echo "Fallback: workflow_run will squash-merge after Pages CI succeeds."
+          fi
+
+  # After Pages CI is green on a PR, squash-merge if still open and eligible.
+  merge:
+    if: >
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Squash-merge eligible content PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          OWNER: ${{ github.repository_owner }}
+          ALLOWLIST_VAR: ${{ vars.CONTENT_AUTOMERGE_AUTHORS }}
+          # First associated PR from the completed Pages run (same-repo PRs only).
+          EVENT_PR: ${{ github.event.workflow_run.pull_requests[0].number }}
+        run: |
+          set -euo pipefail
+
+          pr="${EVENT_PR:-}"
+          if [[ -z "$pr" || "$pr" == "0" ]]; then
+            pr="$(gh pr list --state open --json number,headRefOid \
+              --jq ".[] | select(.headRefOid == \"$HEAD_SHA\") | .number" | head -n1)"
+          fi
+          if [[ -z "$pr" ]]; then
+            echo "Skip: no open PR for head $HEAD_SHA"
+            exit 0
+          fi
+
+          meta="$(gh pr view "$pr" --json number,isDraft,author,mergeable,state,autoMergeRequest)"
+          echo "$meta"
+
+          state="$(echo "$meta" | jq -r .state)"
+          draft="$(echo "$meta" | jq -r .isDraft)"
+          author="$(echo "$meta" | jq -r .author.login)"
+          author_type="$(gh api "users/$author" --jq .type)"
+          mergeable="$(echo "$meta" | jq -r .mergeable)"
+          already_auto="$(echo "$meta" | jq -r '.autoMergeRequest != null')"
+
+          if [[ "$state" != "OPEN" ]]; then
+            echo "Skip: PR #$pr is $state"
+            exit 0
+          fi
+          if [[ "$draft" == "true" ]]; then
+            echo "Skip: draft PR"
+            exit 0
+          fi
+          if [[ "$author_type" == "Bot" ]]; then
+            echo "Skip: bot author '$author'"
+            exit 0
+          fi
+
+          allowlist="${ALLOWLIST_VAR:-$OWNER}"
+          echo "Author filter: allowlist='$allowlist'; PR author='$author'"
+          allowed=false
+          IFS=',' read -ra entries <<< "$allowlist"
+          for entry in "${entries[@]}"; do
+            entry="$(echo "$entry" | tr -d '[:space:]')"
+            if [[ -n "$entry" && "$entry" == "$author" ]]; then
+              allowed=true
+              break
+            fi
+          done
+          if [[ "$allowed" != true ]]; then
+            echo "Skip: author '$author' not allowlisted"
+            exit 0
+          fi
+
+          mapfile -t files < <(gh pr diff "$pr" --name-only)
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "Skip: no changed files"
+            exit 0
+          fi
+          for f in "${files[@]}"; do
+            case "$f" in
+              content|content/*) ;;
+              *)
+                echo "Skip: non-content path '$f'"
+                exit 0
+                ;;
+            esac
+          done
+
+          if [[ "$already_auto" == "true" ]]; then
+            echo "PR #$pr already has auto-merge queued; leaving GitHub to finish"
+            exit 0
+          fi
+          if [[ "$mergeable" == "CONFLICTING" ]]; then
+            echo "Skip: PR #$pr has conflicts"
+            exit 0
+          fi
+
+          # Pages build already succeeded for this head (workflow_run gate).
+          # Prefer --auto when available; otherwise squash-merge now (never --admin).
+          if gh pr merge "$pr" --squash --auto; then
+            echo "Auto-merge (squash) enabled for #$pr after green Pages CI"
+          elif gh pr merge "$pr" --squash; then
+            echo "Squash-merged #$pr after green Pages CI"
+          else
+            echo "Merge did not complete for #$pr (may already be merged or blocked)"
+            exit 0
+          fi
