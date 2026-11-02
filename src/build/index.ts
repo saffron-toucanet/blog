@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { SITE_URL } from "./config.ts";
 import { loadPost, tagSlug, type Post } from "./markdown.ts";
 import {
   DIST_DIR,
@@ -74,6 +75,11 @@ function build(): void {
 
   copyDirIfExists(PUBLIC_DIR, DIST_DIR);
   copyDirIfExists(STYLES_DIR, path.join(DIST_DIR, "assets"));
+
+  // GitHub Pages custom domain (blog.doxiebytes.com) — overwritten after public/ copy.
+  const customDomain = new URL(SITE_URL).hostname;
+  fs.writeFileSync(path.join(DIST_DIR, "CNAME"), `${customDomain}\n`, "utf8");
+  console.log(`Wrote CNAME → dist/CNAME (${customDomain})`);
 
   const posts = loadPosts();
   if (posts.length === 0) {
