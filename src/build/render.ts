@@ -2,6 +2,7 @@ import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "./config.ts";
 import { escapeAttr, escapeHtml } from "./html.ts";
 import type { Post } from "./markdown.ts";
 import { tagSlug } from "./markdown.ts";
+import { OG_IMAGE_SIZE, postOgPath } from "./og.ts";
 import {
   absoluteUrl,
   postPath,
@@ -16,8 +17,11 @@ type PageMeta = {
   noindex?: boolean;
   home?: boolean;
   ogType?: "website" | "article";
+  ogImagePath?: string;
+  ogImageAlt?: string;
   publishedTime?: string;
   tags?: string[];
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 };
 
 type PostNeighbors = {
@@ -61,7 +65,9 @@ function layout(meta: PageMeta, body: string): string {
   const tagsHref = withBase("/tags/");
   const feedHref = withBase("/feed.xml");
   const faviconHref = withBase("/favicon.svg");
-  const ogImage = absoluteUrl("/images/og-default.svg");
+  const ogImagePath = meta.ogImagePath ?? "/images/og-default.svg";
+  const ogImage = absoluteUrl(ogImagePath);
+  const ogImageAlt = meta.ogImageAlt ?? `${SITE_TITLE} — ${SITE_DESCRIPTION}`;
   const serifHref = withBase("/fonts/source-serif-4-latin-wght-normal.woff2");
   const sansHref = withBase("/fonts/source-sans-3-latin-wght-normal.woff2");
   const path = meta.canonicalPath;
@@ -77,12 +83,16 @@ function layout(meta: PageMeta, body: string): string {
           meta.publishedTime
             ? `\n  <meta property="article:published_time" content="${escapeAttr(meta.publishedTime)}">`
             : "",
+          `\n  <meta property="article:author" content="${escapeAttr(SITE_TITLE)}">`,
           ...(meta.tags ?? []).map(
             (tag) =>
               `\n  <meta property="article:tag" content="${escapeAttr(tag)}">`,
           ),
         ].join("")
       : "";
+  const jsonLdBlock = meta.jsonLd
+    ? `\n  <script type="application/ld+json">${JSON.stringify(meta.jsonLd).replace(/</g, "\\u003c")}</script>`
+    : "";
 
   const bodyClass = meta.home ? ' class="home"' : "";
 
@@ -103,8 +113,17 @@ function layout(meta: PageMeta, body: string): string {
   <meta property="og:url" content="${escapeAttr(canonical)}">
   <meta property="og:type" content="${escapeAttr(ogType)}">
   <meta property="og:site_name" content="${escapeAttr(SITE_TITLE)}">
+  <meta property="og:locale" content="en_US">
   <meta property="og:image" content="${escapeAttr(ogImage)}">
-  <meta name="twitter:card" content="summary_large_image">${articleMeta}
+  <meta property="og:image:alt" content="${escapeAttr(ogImageAlt)}">
+  <meta property="og:image:width" content="${OG_IMAGE_SIZE.width}">
+  <meta property="og:image:height" content="${OG_IMAGE_SIZE.height}">
+  <meta property="og:image:type" content="image/svg+xml">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeAttr(pageTitle)}">
+  <meta name="twitter:description" content="${escapeAttr(description)}">
+  <meta name="twitter:image" content="${escapeAttr(ogImage)}">
+  <meta name="twitter:image:alt" content="${escapeAttr(ogImageAlt)}">${articleMeta}${jsonLdBlock}
   <link rel="preload" href="${escapeAttr(serifHref)}" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="${escapeAttr(sansHref)}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="${escapeAttr(cssHref)}">
@@ -116,7 +135,7 @@ function layout(meta: PageMeta, body: string): string {
     <nav class="site-nav" aria-label="Primary">
       <a href="${escapeAttr(homeHref)}"${homeCurrent}>Home</a>
       <a href="${escapeAttr(tagsHref)}"${tagsCurrent}>Tags</a>
-      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color theme">Theme</button>
+      <button type="button" class="theme-toggle" data-theme-toggle aria-pressed="false" aria-label="Theme: system. Click for light.">System</button>
     </nav>
   </header>
   <main id="main">
@@ -129,6 +148,65 @@ ${body}
 </body>
 </html>
 `;
+}
+
+function websiteJsonLd(): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_TITLE,
+    url: absoluteUrl("/"),
+    description: SITE_DESCRIPTION,
+    inLanguage: "en",
+    publisher: {
+      "@type": "Organization",
+      name: SITE_TITLE,
+      url: absoluteUrl("/"),
+      logo: {
+        "@type": "ImageObject",
+        url: absoluteUrl("/favicon.svg"),
+      },
+    },
+  };
+}
+
+function blogPostingJsonLd(post: Post): Record<string, unknown> {
+  const url = absoluteUrl(postPath(post.slug));
+  const image = absoluteUrl(postOgPath(post.slug));
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.description || SITE_DESCRIPTION,
+    datePublished: post.date,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": url,
+    },
+    url,
+    image: [image],
+    keywords: post.tags.length > 0 ? post.tags.join(", ") : undefined,
+    inLanguage: "en",
+    isPartOf: {
+      "@type": "Blog",
+      name: SITE_TITLE,
+      url: absoluteUrl("/"),
+    },
+    author: {
+      "@type": "Organization",
+      name: SITE_TITLE,
+      url: absoluteUrl("/"),
+    },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_TITLE,
+      url: absoluteUrl("/"),
+      logo: {
+        "@type": "ImageObject",
+        url: absoluteUrl("/favicon.svg"),
+      },
+    },
+  };
 }
 
 function formatDate(date: string | undefined): string {
@@ -207,6 +285,8 @@ export function renderIndexPage(posts: Post[]): string {
       description: SITE_DESCRIPTION,
       canonicalPath: "/",
       home: true,
+      ogImageAlt: `${SITE_TITLE} — ${SITE_DESCRIPTION}`,
+      jsonLd: websiteJsonLd(),
     },
     body,
   );
@@ -245,8 +325,11 @@ ${post.bodyHtml}
       description: post.description || SITE_DESCRIPTION,
       canonicalPath: postPath(post.slug),
       ogType: "article",
+      ogImagePath: postOgPath(post.slug),
+      ogImageAlt: `${post.title} · ${SITE_TITLE}`,
       publishedTime: post.date,
       tags: post.tags,
+      jsonLd: blogPostingJsonLd(post),
     },
     body,
   );
