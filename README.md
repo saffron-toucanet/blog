@@ -44,8 +44,6 @@ Agents/automations: Cursor skills live under [`.cursor/skills/`](.cursor/skills/
 
 PRs: `npm ci` → typecheck → build. Push to `main`: also deploy Pages.
 
-**Content auto-merge:** PRs that only change `content/` and are authored by the repo owner (`saffron-toucanet`, or logins in repo variable `CONTENT_AUTOMERGE_AUTHORS`) are squash-merged after the Pages build is green. Enable **Allow auto-merge** (Settings → General → Pull Requests) and preferably require the `Deploy GitHub Pages / build` check on `main`.
-
 **Pages (once):** Source = GitHub Actions; custom domain `blog.doxiebytes.com`; enable **Enforce HTTPS** after DNS checks (manual Pages setting).
 
 **Cloudflare DNS** (`doxiebytes.com` zone) — DNS only (grey cloud), not proxied:
