@@ -282,7 +282,9 @@ main {
 h1,
 h2,
 h3,
-h4 {
+h4,
+h5,
+h6 {
   font-family: var(--font-ui);
   line-height: var(--lh-heading);
   letter-spacing: -0.02em;
@@ -311,6 +313,21 @@ h4 {
   font-size: 1rem;
   font-weight: 600;
   margin-block: var(--space-4) var(--space-2);
+}
+
+h5 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-block: var(--space-4) var(--space-2);
+}
+
+h6 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-block: var(--space-3) var(--space-2);
 }
 
 .post-list,
@@ -440,8 +457,36 @@ time,
 
 .post-body h2,
 .post-body h3,
-.post-body h4 {
+.post-body h4,
+.post-body h5,
+.post-body h6 {
   margin-block: var(--space-5) var(--space-3);
+}
+
+.post-body table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  line-height: var(--lh-meta);
+  overflow-x: auto;
+}
+
+.post-body th,
+.post-body td {
+  border: 1px solid var(--border);
+  padding: 0.45rem 0.7rem;
+  text-align: start;
+  vertical-align: top;
+}
+
+.post-body th {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  background: var(--code-bg);
+}
+
+.post-body tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--surface) 70%, transparent);
 }
 
 .post-body a {

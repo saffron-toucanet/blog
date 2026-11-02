@@ -1,9 +1,12 @@
 const K = "theme";
 
-const sys = (): "light" | "dark" =>
+type Theme = "light" | "dark";
+type Mode = Theme | "system";
+
+const sys = (): Theme =>
   matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 
-const get = (): "light" | "dark" | null => {
+const stored = (): Theme | null => {
   try {
     const v = localStorage.getItem(K);
     return v === "light" || v === "dark" ? v : null;
@@ -12,33 +15,54 @@ const get = (): "light" | "dark" | null => {
   }
 };
 
-const now = (): "light" | "dark" => get() ?? sys();
+const mode = (): Mode => stored() ?? "system";
 
-const set = (t: "light" | "dark"): void => {
+const effective = (): Theme => stored() ?? sys();
+
+const apply = (next: Mode): void => {
   try {
-    localStorage.setItem(K, t);
+    if (next === "system") localStorage.removeItem(K);
+    else localStorage.setItem(K, next);
   } catch {
     /* ignore */
   }
-  document.documentElement.setAttribute("data-theme", t);
+  if (next === "system") {
+    document.documentElement.removeAttribute("data-theme");
+  } else {
+    document.documentElement.setAttribute("data-theme", next);
+  }
 };
 
-const label = (btn: HTMLButtonElement): void => {
-  const next = now() === "dark" ? "light" : "dark";
-  btn.setAttribute("aria-label", `Switch to ${next} theme`);
-  btn.textContent = next === "dark" ? "Dark" : "Light";
+const cycle = (current: Mode): Mode =>
+  current === "system" ? "light" : current === "light" ? "dark" : "system";
+
+const sync = (btn: HTMLButtonElement): void => {
+  const current = mode();
+  const eff = effective();
+  const label =
+    current === "system" ? "System" : current === "dark" ? "Dark" : "Light";
+  btn.textContent = label;
+  btn.setAttribute(
+    "aria-label",
+    current === "system"
+      ? `Theme: system (${eff}). Click for light.`
+      : current === "light"
+        ? "Theme: light. Click for dark."
+        : "Theme: dark. Click to follow system.",
+  );
+  btn.setAttribute("aria-pressed", eff === "dark" ? "true" : "false");
 };
 
 const boot = (): void => {
   const btn = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
   if (!btn) return;
-  label(btn);
+  sync(btn);
   btn.addEventListener("click", () => {
-    set(now() === "dark" ? "light" : "dark");
-    label(btn);
+    apply(cycle(mode()));
+    sync(btn);
   });
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-    if (!get()) label(btn);
+    if (mode() === "system") sync(btn);
   });
 };
 

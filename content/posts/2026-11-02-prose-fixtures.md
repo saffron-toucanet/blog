@@ -38,6 +38,22 @@ Here’s a tiny graphite + ink swatch so the stylesheet’s image rules have som
 
 > Measure is a promise. If the column wanders, the post stops feeling like reading and starts feeling like a dashboard.
 
+### Nested title depth
+
+#### Level four stays quiet
+
+##### Level five should still feel like a heading
+
+###### Level six is uppercase meta
+
+## Table
+
+| Token | Role | Notes |
+| --- | --- | --- |
+| `--text` | Body ink | High contrast on paper |
+| `--muted` | Meta | Dates, tags, captions |
+| `--link` | Links | Ink blue / sky in dark |
+
 ---
 
 If this page looks calm in light and dark, the Phase 1–3 tokens are doing their job. If it doesn’t, fix the CSS—not the fixtures.

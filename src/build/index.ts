@@ -19,6 +19,11 @@ import {
   tagPath,
 } from "./paths.ts";
 import {
+  postOgPath,
+  renderDefaultOgSvg,
+  renderPostOgSvg,
+} from "./og.ts";
+import {
   renderIndexPage,
   renderNotFoundPage,
   renderPostPage,
@@ -153,17 +158,39 @@ export function build(): void {
   writePage(DIST_DIR, renderIndexPage(posts));
   console.log("Built home → dist/index.html");
 
+  const ogDir = path.join(DIST_DIR, "images");
+  ensureDir(ogDir);
+  fs.writeFileSync(
+    path.join(ogDir, "og-default.svg"),
+    renderDefaultOgSvg(),
+    "utf8",
+  );
+  console.log("Built OG → dist/images/og-default.svg");
+
   const sortedPosts = [...posts].sort((a, b) => {
     const byDate = (b.date ?? "").localeCompare(a.date ?? "");
     return byDate !== 0 ? byDate : a.slug.localeCompare(b.slug);
   });
+  const postOgDir = path.join(DIST_DIR, "images", "og");
+  ensureDir(postOgDir);
   for (let i = 0; i < sortedPosts.length; i++) {
     const post = sortedPosts[i]!;
     const newer = i > 0 ? sortedPosts[i - 1] : undefined;
     const older = i < sortedPosts.length - 1 ? sortedPosts[i + 1] : undefined;
     const outDir = path.join(DIST_DIR, "posts", post.slug);
     writePage(outDir, renderPostPage(post, { newer, older }));
+    const ogFile = path.join(postOgDir, `${post.slug}.svg`);
+    fs.writeFileSync(
+      ogFile,
+      renderPostOgSvg({
+        title: post.title,
+        description: post.description,
+        date: post.date,
+      }),
+      "utf8",
+    );
     console.log(`Built post → dist${postPath(post.slug)}index.html`);
+    console.log(`Built OG → dist${postOgPath(post.slug)}`);
   }
 
   const tags = buildTagMap(posts);
