@@ -28,6 +28,7 @@ Follow this skill end-to-end. Fix causes (vagueness, missing judgment), not just
 ## When to use
 
 - New post from notes, a bug story, a decision writeup, or a personal essay.
+- **Daily Dev Digest posts** when the user or the daily automation explicitly requests post type **digest** (see Structure → Digest).
 - Rewrite / de-slop an existing draft.
 - Review a post before publish (`draft: false`).
 
@@ -59,11 +60,11 @@ Rules:
 ## Workflow (always)
 
 1. **Collect inputs** (from the user or repo). Minimum:
-   - One-sentence claim or question the post answers.
+   - One-sentence claim or question the post answers (for **digest** posts: the day’s roundup is the claim — e.g. “Dev Digest for DATE”).
    - Audience in one line (who, with what problem).
-   - Evidence: notes, numbers, error text, failed attempts, decisions, scenes — *only what is real*.
-   - Post type: technical | personal | meta.
-2. **Refuse blank-topic drafting.** If you only have “write about X,” ask for the claim + 5–10 bullets, or write an outline of questions for the user to fill — not a full post of filler.
+   - Evidence: notes, numbers, error text, failed attempts, decisions, scenes — *only what is real* (for digests: verified primary URLs + curator takeaways).
+   - Post type: technical | personal | meta | **digest**.
+2. **Refuse blank-topic drafting.** If you only have “write about X,” ask for the claim + 5–10 bullets, or write an outline of questions for the user to fill — not a full post of filler. Exception: a filled curator Dev Digest counts as the brief for post type **digest**.
 3. **Draft from the brief**, not from the average internet take.
 4. **Run editing passes** (below).
 5. **Run anti-slop + publish checklists.**
@@ -81,7 +82,8 @@ Voice is **stance + specificity + rhythm**, not adjectives. Apply the locked hou
 - Vary sentence length. Short sentences are fine after a long one.
 - Contractions, informal where natural. Talk like a sharp teammate writing the daily note.
 - One through-line per post. Cut side quests that don’t serve the claim.
-- For news-ish posts: lead with the change, then why it matters, then your take — not a roundup of “top 5.”
+- For news-ish posts (non-digest): lead with the change, then why it matters, then your take — not a roundup of “top 5.”
+- For **digest** posts (only when requested): the through-line *is* the day’s curated set — keep Top Story + Highlights structure; do not collapse into a single-item essay.
 
 **Don’t:**
 
@@ -176,6 +178,17 @@ Code: shortest runnable or copy-pastable fragment that proves the point. Name ve
 
 Short. One job (e.g. “drafts are excluded from the feed”). No journey narrative.
 
+### Digest (daily Dev Digest — only when requested)
+
+**Conflict note:** Default news-ish posts prefer **one** lead, not a top-N card list. That default is **overridden** when the user or the daily automation explicitly sets post type **digest** (see the daily automation prompt / house digest rules). In that case a curated roundup **is** the allowed post shape.
+
+- Title like `Dev Digest — YYYY-MM-DD`.
+- Body follows curator structure: Top Story, Highlights (and optional Worth Reading / On the Radar).
+- House voice adapted for a roundup: first-person takes OK, still dry-warm / low hype.
+- Every item needs a **verified** primary URL — never invent links.
+- Do **not** expand one digest item into a longform technical/personal post unless the user explicitly asks for that separate piece.
+- Quiet days: fewer items; never pad with invented stories.
+
 ### Titles
 
 Prefer searchable outcomes over clever mysteries:
@@ -184,6 +197,7 @@ Prefer searchable outcomes over clever mysteries:
 - Bad: `The Day the Database Fought Back`
 - Good: `Why this blog stays framework-free`
 - Bad: `Reimagining the Future of My Content Journey`
+- Good (digest only): `Dev Digest — 2026-11-02`
 
 ---
 
@@ -297,7 +311,7 @@ Replace with a plain word **or cut the sentence** if nothing concrete remains. D
 
 - [ ] One-sentence claim / question  
 - [ ] Named reader  
-- [ ] Post type (technical / personal / meta)  
+- [ ] Post type (technical / personal / meta / digest)  
 - [ ] Real notes, numbers, scenes (or explicit gaps)  
 - [ ] Filename `YYYY-MM-DD-slug.md` + frontmatter stub  
 
