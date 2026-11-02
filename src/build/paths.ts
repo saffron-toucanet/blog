@@ -1,6 +1,6 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { BASE_PATH } from "./config.ts";
+import { BASE_PATH, SITE_URL } from "./config.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -25,9 +25,37 @@ export function withBase(sitePath: string): string {
   return `${base}${normalized}`;
 }
 
+/** Absolute URL for a site path (for canonicals). Always trailing-slash for dirs. */
+export function absoluteUrl(sitePath: string): string {
+  const origin = SITE_URL.replace(/\/$/, "");
+  let pathname = withBase(sitePath);
+  if (!pathname.endsWith("/") && !pathname.includes(".")) {
+    pathname = `${pathname}/`;
+  }
+  if (pathname === "//") pathname = "/";
+  return `${origin}${pathname}`;
+}
+
 /** Default slug from `YYYY-MM-DD-slug.md` filename (strip date prefix). */
 export function slugFromFilename(filename: string): string {
   const base = filename.replace(/\.md$/i, "");
   const match = base.match(/^\d{4}-\d{2}-\d{2}-(.+)$/);
   return match ? match[1]! : base;
+}
+
+/** URL-safe tag slug. */
+export function slugifyTag(tag: string): string {
+  return tag
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export function postPath(slug: string): string {
+  return `/posts/${slug}/`;
+}
+
+export function tagPath(tagSlug: string): string {
+  return `/tags/${tagSlug}/`;
 }

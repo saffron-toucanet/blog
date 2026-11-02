@@ -1,6 +1,220 @@
-/* Phase A placeholder — readable typography lands in Phase B. */
+/* Phase B — readable typography, content measure, code blocks. */
+
+:root {
+  color-scheme: light;
+  --text: #1a1a1a;
+  --muted: #555;
+  --bg: #fafafa;
+  --border: #ddd;
+  --link: #0b57d0;
+  --code-bg: #f0f0f0;
+  --measure: 40rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+}
+
+a {
+  color: var(--link);
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.site-header,
+main,
+.site-footer {
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  padding-block: 1.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.site-title {
   font-family: system-ui, sans-serif;
-  margin: 1rem;
-  line-height: 1.5;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.site-nav {
+  font-family: system-ui, sans-serif;
+  font-size: 0.95rem;
+}
+
+.site-nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.site-nav a:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+main {
+  padding-block: 1.75rem 3rem;
+}
+
+.site-footer {
+  padding-block: 1.25rem 2rem;
+  border-top: 1px solid var(--border);
+  font-family: system-ui, sans-serif;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.site-footer a {
+  color: inherit;
+}
+
+h1,
+h2 {
+  font-family: system-ui, sans-serif;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 1.75rem;
+  margin: 0 0 1rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  margin: 0 0 0.35rem;
+}
+
+.post-list,
+.tag-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.post-item {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.post-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.post-item a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.post-item a:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.post-desc {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+}
+
+time {
+  display: block;
+  font-family: system-ui, sans-serif;
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.tags {
+  margin: 0.75rem 0 0;
+  font-family: system-ui, sans-serif;
+  font-size: 0.875rem;
+}
+
+.tag {
+  display: inline-block;
+  margin-right: 0.5rem;
+  color: var(--link);
+}
+
+.tag-list li {
+  margin-bottom: 0.5rem;
+  font-family: system-ui, sans-serif;
+}
+
+.tag-list .count {
+  color: var(--muted);
+}
+
+.post-header {
+  margin-bottom: 1.5rem;
+}
+
+.post-header h1 {
+  margin-bottom: 0.5rem;
+}
+
+.post-body > *:first-child {
+  margin-top: 0;
+}
+
+.post-body p,
+.post-body ul,
+.post-body ol,
+.post-body pre,
+.post-body blockquote {
+  margin-block: 0 1rem;
+}
+
+.post-body pre {
+  overflow-x: auto;
+  padding: 0.85rem 1rem;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.post-body code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.post-body :not(pre) > code {
+  padding: 0.1em 0.35em;
+  background: var(--code-bg);
+  border-radius: 3px;
+}
+
+.post-body blockquote {
+  margin-inline: 0;
+  padding-inline: 1rem;
+  border-left: 3px solid var(--border);
+  color: var(--muted);
 }
