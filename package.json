@@ -16,9 +16,10 @@
   "devDependencies": {
     "@types/node": "^26.6.6",
     "chokidar": "^6.0.0",
+    "esbuild": "^0.28.2",
     "gray-matter": "^4.0.3",
     "marked": "^18.1.2",
     "tsx": "^4.19.3",
-    "typescript": "^5.8.2"
+    "typescript": "^7.0.2"
   }
 }
