@@ -3,9 +3,9 @@ name: dev-news-curator
 description: >-
   Daily software-dev news digest for an experienced engineer (.NET, TypeScript,
   React, Rust, Flutter). Use when curating/skimming news, building a Dev Digest,
-  or sourcing candidates for doxiebytes posts. Digests are research only — never
-  auto-post; promote via blog-writing + new-blog-post only when claim/evidence
-  clear. Never invent URLs.
+  or sourcing candidates for doxiebytes posts. Curator output alone is research —
+  publish only via blog-writing + new-blog-post when the user or daily automation
+  requests a digest post (or an explicit single-item deep-dive). Never invent URLs.
 ---
 
 # Dev News Curator
@@ -20,7 +20,7 @@ This skill feeds research for **doxiebytes** (`blog.doxiebytes.com`, tagline **�
 - Agent needs high-signal source candidates before drafting a doxiebytes note.
 - Follow-ups: dig deeper into a digest item, or adjust mix (e.g. “less AI”, “more Rust”).
 
-Do **not** use this skill to invent a blog post from a quiet day or a thin headline. Do **not** write `content/posts/` or open a publish PR under this skill alone.
+Do **not** use this skill to invent a blog post from a quiet day or a thin headline. Do **not** write `content/posts/` or open a publish PR under this skill alone — the daily automation (or user) hands the finished digest to blog-writing + new-blog-post.
 
 ## About the reader
 
@@ -104,7 +104,7 @@ Concise, direct, technical. No hype (“game-changer”, “revolutionary”), n
 
 ## On-demand requests
 
-Follow-ups (“dig deeper into item 3”, “what’s new in Rust this month?”): answer in depth with sources, same quality bar. Still research — not a publish path unless the user explicitly asks to draft/ship a post and the promotion gate passes.
+Follow-ups (“dig deeper into item 3”, “what’s new in Rust this month?”): answer in depth with sources, same quality bar. Still research — not a publish path unless the user explicitly asks to draft/ship (digest post or longform) and the matching gate passes.
 
 ## Feedback
 
@@ -114,59 +114,63 @@ Honor mix adjustments (“less AI news”, “more Rust”) on subsequent digest
 
 ## Handoff to doxiebytes blog
 
-### Digests are research, not posts
+### Digests are research until a publish skill takes them
 
-| This skill produces | It does **not** produce |
+| This skill produces | It does **not** produce (alone) |
 |---|---|
-| Skimmable digest / source brief | `content/posts/YYYY-MM-DD-slug.md` |
-| Candidate headlines + primary links | Auto-`draft: false` publish |
-| Optional “promote?” shortlist | Roundup posts that restate the digest |
+| Skimmable digest / source brief | `content/posts/YYYY-MM-DD-slug.md` written under this skill |
+| Candidate headlines + primary links | Auto-`draft: false` without blog-writing + new-blog-post |
+| Optional “promote?” shortlist for longform | A single-item deep-dive unless the user asks |
 
-**Never** treat a digest (or a single digest bullet) as a finished blog post. **Never** open a publish PR or flip `draft: false` from curator output alone.
+**Never** open a publish PR or flip `draft: false` from curator output alone.
 
-### Promote only when the gate passes
+**Daily automation exception:** when the scheduled daily prompt (or the user) requests a **digest post**, the finished Dev Digest *is* the ship target — hand the full digest to blog-writing (post type **digest**) → new-blog-post. Do **not** auto-promote one Top Story into a longform essay in that path.
 
-Promote an item toward a post **only if all** of the following hold:
+### Promote a single item to longform only when asked
 
-1. User asks to draft/publish **or** explicitly marks an item for promotion.
+Promote **one** digest item into a separate technical/personal post **only if all** hold:
+
+1. User asks to draft/publish that item (or explicitly marks it for longform) — **not** the default daily automation path.
 2. There is a **real one-sentence claim or question** (not “coverage of X” or “top story today”).
 3. There is **real evidence** the writer can use: primary source facts, versions, changelogs, numbers, lived notes — not rumour, not hype, not aggregator summaries alone.
-4. Item is **not** digest-only (see below).
+4. Item is **not** longform-blocked (see below).
 5. Draft will be written with [`../blog-writing/SKILL.md`](../blog-writing/SKILL.md) (voice, openings, specificity, anti-slop, refuse blank-topic).
 6. Shipping uses [`../new-blog-post/SKILL.md`](../new-blog-post/SKILL.md) (file path, build, PR / `draft` flag).
 
-If the gate fails: keep it in the digest (or a research note). Ask for claim + 5–10 bullets rather than inventing a post.
+If the gate fails: keep it in the digest (or a research note). Ask for claim + 5–10 bullets rather than inventing a longform post.
 
-### Must stay digest-only (do not promote)
+### Must not become longform (stay in the digest)
 
 - Aggregator noise, listicles, SEO farms, vendor puff.
 - **`[Unconfirmed]`** / rumour items until confirmed with a primary source.
 - **`[Paywall]`**-only stories you cannot fairly summarize from free primary material the user can verify.
 - Thin “announcement restatements” with no claim, trade-off, or lived angle.
-- Full digest roundups (“today’s 7 links”) — blog-writing prefers **one** news-ish lead (what shipped/broke/mattered), not a top-N card list.
 - Items that only work as “worth reading” bookmarks with no author take.
+
+The full digest roundup itself **may** ship as a blog post when post type is **digest** (daily automation or explicit user request). That is not “promoting one item”; it is publishing the digest.
 
 ### Conflict resolution (publish path)
 
 When this skill and the blog skills disagree:
 
-1. **Publish / draft / ship / PR / `content/posts/`** → follow **blog-writing** + **new-blog-post**. Curator format, digest tags, and roundup structure do **not** override.
-2. **News discovery / ranking / link hygiene / “was this already digested?”** → follow this curator skill.
-3. **URLs and citations** → never invent (both skills). Unverified link → omit from digest; for a post, mark `[need: …]` or drop the claim — do not fabricate.
-4. **Voice** → digests use curator tone; **posts** use locked house voice from blog-writing (first-person **I**, dry-warm, low hype). Do not paste digest bullets unchanged into a post.
-5. **SEO / tags on the site** → new-blog-post + preferences (reuse real post tags). Digest `tag` labels are for skimming only.
+1. **Publish / draft / ship / PR / `content/posts/`** → follow **blog-writing** + **new-blog-post**. This skill never writes those files alone.
+2. **Post shape** → if the user/automation requests **digest**, roundup structure from this skill is allowed (blog-writing digest exception). Otherwise blog-writing’s default one-lead news shape wins for longform.
+3. **News discovery / ranking / link hygiene / “was this already digested?”** → follow this curator skill.
+4. **URLs and citations** → never invent (both skills). Unverified link → omit from digest; for a post, mark `[need: …]` or drop the claim — do not fabricate.
+5. **Voice** → research digests use curator tone; **published** digest/posts use locked house voice from blog-writing (first-person **I**, dry-warm, low hype). Adapt bullets — do not paste raw research notes unchanged.
+6. **SEO / tags on the site** → new-blog-post + preferences (reuse real post tags). Digest `tag` labels are for skimming only.
 
-### Suggested promote handoff shape
+### Suggested longform handoff shape (optional; not the daily default)
 
-When recommending promotion (optional short block after the digest):
+When recommending a **separate** longform post (only if the user asked — skip this block on the daily digest automation):
 
 ```markdown
-## Promote? (optional)
+## Promote to longform? (optional)
 - **Item:** <title + link>
 - **Claim (one sentence):** …
 - **Evidence available:** … (versions, changelog bullets, what you’d add from experience)
 - **Blockers:** none | [Unconfirmed] | [Paywall] | thin / no claim | …
-- **Next:** hand to blog-writing → new-blog-post, or leave digest-only
+- **Next:** hand to blog-writing → new-blog-post, or leave in the digest
 ```
 
-Do not invent the claim or evidence to fill this block.
+Do not invent the claim or evidence to fill this block. Daily automation should publish the digest post instead of this path.

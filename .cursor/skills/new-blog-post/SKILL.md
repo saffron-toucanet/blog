@@ -18,10 +18,11 @@ Site: [blog.doxiebytes.com](https://blog.doxiebytes.com). Tagline: **“Dev news
 ## When to use
 
 - User asks to add / publish / ship a new blog post.
+- Daily automation ships a **Dev Digest** post (post type digest from blog-writing) — same file/build/PR path.
 - You have a brief (or notes) and need the file on GitHub so Pages can deploy it.
 - Drafting into the repo with `draft: true` for later publish.
 
-Do **not** invent a post from a bare topic — collect a brief first (see writing skill).
+Do **not** invent a post from a bare topic — collect a brief first (see writing skill). A completed curator Dev Digest counts as the brief for digest posts.
 
 ## Prerequisites
 
@@ -50,9 +51,9 @@ gh auth status   # confirms auth without printing the secret
 
 Collect (or ask for) at least:
 
-- One-sentence claim / question
-- Post type: technical | personal | meta
-- Real notes / evidence (or explicit gaps)
+- One-sentence claim / question (for digests: “Dev Digest for DATE”)
+- Post type: technical | personal | meta | digest
+- Real notes / evidence (or explicit gaps; digests need verified primary URLs)
 - Publish intent: **draft** (`draft: true`) or **live** (`draft: false`)
 - Suggested slug (kebab-case) and 1–4 tags (reuse existing tags when they fit: `meta`, `notes`, …)
 
