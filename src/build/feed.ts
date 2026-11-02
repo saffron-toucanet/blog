@@ -15,13 +15,12 @@ function rfc822Date(date: string | undefined): string {
   return d.toUTCString();
 }
 
-/** Stable channel lastBuildDate: newest post date (not wall-clock build time). */
+/** Newest post date — avoids feed churn on every rebuild. */
 function lastBuildDate(posts: Post[]): string {
   const newest = sortByDateDesc(posts).find((p) => p.date)?.date;
   return rfc822Date(newest);
 }
 
-/** RSS 2.0 feed at /feed.xml */
 export function renderRssFeed(posts: Post[]): string {
   const sorted = sortByDateDesc(posts);
   const channelLink = absoluteUrl("/");
@@ -55,7 +54,6 @@ ${items}
 `;
 }
 
-/** Sitemap including home, posts, and tag pages. */
 export function renderSitemap(
   posts: Post[],
   tags: Map<string, { label: string; posts: Post[] }>,

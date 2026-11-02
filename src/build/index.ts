@@ -34,7 +34,6 @@ function copyDirIfExists(src: string, dest: string): void {
   if (!fs.existsSync(src)) return;
   ensureDir(dest);
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    // Keep dist clean of placeholder keep-files.
     if (entry.name === ".gitkeep") continue;
     const from = path.join(src, entry.name);
     const to = path.join(dest, entry.name);
@@ -46,7 +45,6 @@ function copyDirIfExists(src: string, dest: string): void {
   }
 }
 
-/** Emit client scripts from `src/site/scripts/*.ts` → `dist/assets/*.js`. */
 function compileClientScripts(): void {
   if (!fs.existsSync(SCRIPTS_DIR)) return;
   const outDir = path.join(DIST_DIR, "assets");
@@ -62,7 +60,6 @@ function compileClientScripts(): void {
       },
       fileName: name,
     });
-    // Light minify: collapse runs of whitespace (keep under ~1KB for theme.js).
     const minified = outputText.replace(/\s+/g, " ").trim() + "\n";
     const outName = name.replace(/\.ts$/, ".js");
     fs.writeFileSync(path.join(outDir, outName), minified, "utf8");
@@ -75,7 +72,6 @@ function writePage(dir: string, html: string): void {
   fs.writeFileSync(path.join(dir, "index.html"), html, "utf8");
 }
 
-/** Include draft posts when INCLUDE_DRAFTS=1/true or `--drafts` is passed. */
 function includeDrafts(): boolean {
   const env = process.env.INCLUDE_DRAFTS?.trim().toLowerCase();
   if (env === "1" || env === "true" || env === "yes") return true;
@@ -120,7 +116,6 @@ function buildTagMap(posts: Post[]): Map<string, { label: string; posts: Post[] 
   return map;
 }
 
-/** Build the static site into `dist/`. Draft posts are excluded. */
 export function build(): void {
   fs.rmSync(DIST_DIR, { recursive: true, force: true });
   ensureDir(DIST_DIR);
@@ -129,7 +124,7 @@ export function build(): void {
   copyDirIfExists(STYLES_DIR, path.join(DIST_DIR, "assets"));
   compileClientScripts();
 
-  // GitHub Pages custom domain (blog.doxiebytes.com) — overwritten after public/ copy.
+  // Write after public/ copy so a public CNAME cannot clobber it.
   const customDomain = new URL(SITE_URL).hostname;
   fs.writeFileSync(path.join(DIST_DIR, "CNAME"), `${customDomain}\n`, "utf8");
   console.log(`Wrote CNAME → dist/CNAME (${customDomain})`);

@@ -1,11 +1,3 @@
-/*
-  Phase 1–3 — tokens, type, rhythm, graphite paper + ink-blue.
-  Body: Source Serif 4 (self-hosted) → Iowan/Palatino/Georgia.
-  UI: Source Sans 3 (self-hosted) → Avenir/Segoe/system-ui.
-  Phase 2: prefers-color-scheme dark; Phase 3: data-theme toggle + fonts.
-*/
-
-/* Relative to /assets/main.css → /fonts/… (BASE_PATH-safe). */
 @font-face {
   font-family: "Source Serif 4";
   src: url("../fonts/source-serif-4-latin-wght-normal.woff2") format("woff2");
@@ -25,7 +17,6 @@
 :root {
   color-scheme: light dark;
 
-  /* Graphite paper (light) */
   --bg: #e9ecf1;
   --bg-deep: #dde2ea;
   --bg-glow: #d5dbe6;
@@ -71,7 +62,6 @@ body {
   line-height: var(--lh-body);
   color: var(--text);
   background-color: var(--bg);
-  /* Cool graphite wash — atmosphere without purple/cream clichés */
   background-image:
     radial-gradient(ellipse 110% 70% at 50% -15%, var(--bg-glow) 0%, transparent 58%),
     linear-gradient(180deg, var(--bg-deep) 0%, var(--bg) 32%, var(--bg-bottom) 100%);
@@ -554,7 +544,7 @@ time,
   text-align: end;
 }
 
-/* Dark tokens — system preference (skipped when data-theme="light") */
+/* System dark unless data-theme="light". */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
@@ -573,7 +563,7 @@ time,
   }
 }
 
-/* Explicit override from theme toggle (wins over system) */
+/* Toggle override (wins over system). */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #12151a;

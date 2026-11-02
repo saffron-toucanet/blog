@@ -1,5 +1,3 @@
-/** XML escaping helpers. */
-
 export function escapeXml(text: string): string {
   return text
     .replaceAll("&", "&amp;")

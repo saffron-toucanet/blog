@@ -24,14 +24,9 @@ export type Post = {
   filename: string;
 };
 
-/**
- * Markdown → HTML policy: no raw HTML; only http(s)/mailto/relative URLs.
- * Site-absolute paths (`/…`) are rewritten with BASE_PATH.
- */
 function isSafeHref(href: string): boolean {
   const trimmed = href.trim();
   if (!trimmed) return false;
-  // Block dangerous schemes (also after leading whitespace / control chars).
   if (/^[\s\u0000-\u001F]*(?:javascript|data|vbscript|file)\s*:/i.test(trimmed)) {
     return false;
   }
@@ -48,8 +43,8 @@ function rewriteHref(href: string): string {
 
 const marked = new Marked();
 marked.use({
-  // Disable raw HTML tokens so tags are escaped as text (not executed, and
-  // not greedily absorbed into HTML blocks that would drop following Markdown).
+  // Skip HTML tokens so raw tags stay escaped text (marked would otherwise
+  // swallow following Markdown into an HTML block until a blank line).
   tokenizer: {
     html() {
       return undefined;
@@ -78,7 +73,6 @@ marked.use({
   },
 });
 
-/** Parse YAML frontmatter + Markdown body → HTML fragment. */
 export function parseMarkdownFile(filePath: string): {
   frontmatter: PostFrontmatter;
   bodyHtml: string;
