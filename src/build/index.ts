@@ -153,7 +153,7 @@ export function build(): void {
   }
 
   if (posts.length === 0) {
-    throw new Error(`No published Markdown posts found in ${POSTS_DIR}`);
+    console.log(`No published Markdown posts in ${POSTS_DIR} — building empty index`);
   }
 
   writePage(DIST_DIR, renderIndexPage(posts));
