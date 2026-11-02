@@ -1,4 +1,3 @@
-/** Theme toggle: data-theme + localStorage. Target <1KB emitted. */
 const K = "theme";
 
 const sys = (): "light" | "dark" =>

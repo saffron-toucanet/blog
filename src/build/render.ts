@@ -15,9 +15,7 @@ type PageMeta = {
   canonicalPath: string;
   noindex?: boolean;
   home?: boolean;
-  /** Open Graph type; posts use `article`. */
   ogType?: "website" | "article";
-  /** ISO date (YYYY-MM-DD) for article:published_time. */
   publishedTime?: string;
   tags?: string[];
 };
@@ -27,7 +25,6 @@ type PostNeighbors = {
   older?: Post;
 };
 
-/** Inline bootstrap: apply stored theme before paint (no FOUC). */
 const THEME_BOOT =
   "(function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();";
 

@@ -4,7 +4,6 @@ import { BASE_PATH, SITE_URL } from "./config.ts";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** Repo root (parent of `src/`). */
 export const ROOT = path.resolve(__dirname, "../..");
 export const CONTENT_DIR = path.join(ROOT, "content");
 export const POSTS_DIR = path.join(CONTENT_DIR, "posts");
@@ -13,10 +12,6 @@ export const STYLES_DIR = path.join(ROOT, "src", "site", "styles");
 export const SCRIPTS_DIR = path.join(ROOT, "src", "site", "scripts");
 export const DIST_DIR = path.join(ROOT, "dist");
 
-/**
- * Join a site-absolute path with BASE_PATH.
- * BASE_PATH is `/` for the custom domain (blog.doxiebytes.com).
- */
 export function withBase(sitePath: string): string {
   const normalized = sitePath.startsWith("/") ? sitePath : `/${sitePath}`;
   if (BASE_PATH === "/" || BASE_PATH === "") {
@@ -26,7 +21,6 @@ export function withBase(sitePath: string): string {
   return `${base}${normalized}`;
 }
 
-/** Absolute URL for a site path (for canonicals). Always trailing-slash for dirs. */
 export function absoluteUrl(sitePath: string): string {
   const origin = SITE_URL.replace(/\/$/, "");
   let pathname = withBase(sitePath);
@@ -37,14 +31,13 @@ export function absoluteUrl(sitePath: string): string {
   return `${origin}${pathname}`;
 }
 
-/** Default slug from `YYYY-MM-DD-slug.md` filename (strip date prefix). */
+/** Slug from `YYYY-MM-DD-slug.md` (date prefix stripped). */
 export function slugFromFilename(filename: string): string {
   const base = filename.replace(/\.md$/i, "");
   const match = base.match(/^\d{4}-\d{2}-\d{2}-(.+)$/);
   return match ? match[1]! : base;
 }
 
-/** URL-safe tag slug. */
 export function slugifyTag(tag: string): string {
   return tag
     .trim()
