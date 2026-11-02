@@ -1,0 +1,6 @@
+/* Phase A placeholder — readable typography lands in Phase B. */
+body {
+  font-family: system-ui, sans-serif;
+  margin: 1rem;
+  line-height: 1.5;
+}
