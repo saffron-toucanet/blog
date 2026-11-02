@@ -10,6 +10,7 @@ export const CONTENT_DIR = path.join(ROOT, "content");
 export const POSTS_DIR = path.join(CONTENT_DIR, "posts");
 export const PUBLIC_DIR = path.join(ROOT, "public");
 export const STYLES_DIR = path.join(ROOT, "src", "site", "styles");
+export const SCRIPTS_DIR = path.join(ROOT, "src", "site", "scripts");
 export const DIST_DIR = path.join(ROOT, "dist");
 
 /**

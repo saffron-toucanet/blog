@@ -17,6 +17,15 @@ type PageMeta = {
   home?: boolean;
 };
 
+type PostNeighbors = {
+  newer?: Post;
+  older?: Post;
+};
+
+/** Inline bootstrap: apply stored theme before paint (no FOUC). */
+const THEME_BOOT =
+  "(function(){try{var t=localStorage.getItem('theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}})();";
+
 function navCurrent(path: string, href: string): string {
   if (href === "/") {
     return path === "/" ? ' aria-current="page"' : "";
@@ -29,15 +38,28 @@ function navCurrent(path: string, href: string): string {
   return "";
 }
 
+function readingMinutes(html: string): number {
+  const text = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&[a-z]+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const words = text ? text.split(" ").length : 0;
+  return Math.max(1, Math.round(words / 200));
+}
+
 function layout(meta: PageMeta, body: string): string {
   const pageTitle =
     meta.title === SITE_TITLE ? SITE_TITLE : `${meta.title} · ${SITE_TITLE}`;
   const description = meta.description || SITE_DESCRIPTION;
   const canonical = absoluteUrl(meta.canonicalPath);
   const cssHref = withBase("/assets/main.css");
+  const themeHref = withBase("/assets/theme.js");
   const homeHref = withBase("/");
   const tagsHref = withBase("/tags/");
   const feedHref = withBase("/feed.xml");
+  const serifHref = withBase("/fonts/source-serif-4-latin-wght-normal.woff2");
+  const sansHref = withBase("/fonts/source-sans-3-latin-wght-normal.woff2");
   const path = meta.canonicalPath;
   const homeCurrent = navCurrent(path, "/");
   const tagsCurrent = navCurrent(path, "/tags/");
@@ -53,6 +75,7 @@ function layout(meta: PageMeta, body: string): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
+  <script>${THEME_BOOT}</script>
   <title>${escapeHtml(pageTitle)}</title>
   <meta name="description" content="${escapeAttr(description)}">${robots}
   <link rel="canonical" href="${escapeAttr(canonical)}">
@@ -62,6 +85,8 @@ function layout(meta: PageMeta, body: string): string {
   <meta property="og:url" content="${escapeAttr(canonical)}">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="${escapeAttr(SITE_TITLE)}">
+  <link rel="preload" href="${escapeAttr(serifHref)}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="${escapeAttr(sansHref)}" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="${escapeAttr(cssHref)}">
 </head>
 <body${bodyClass}>
@@ -71,6 +96,7 @@ function layout(meta: PageMeta, body: string): string {
     <nav class="site-nav" aria-label="Primary">
       <a href="${escapeAttr(homeHref)}"${homeCurrent}>Home</a>
       <a href="${escapeAttr(tagsHref)}"${tagsCurrent}>Tags</a>
+      <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color theme">Theme</button>
     </nav>
   </header>
   <main id="main">
@@ -79,6 +105,7 @@ ${body}
   <footer class="site-footer">
     <p><a href="${escapeAttr(homeHref)}">${escapeHtml(SITE_TITLE)}</a> · ${escapeHtml(SITE_URL.replace(/^https?:\/\//, ""))} · <a href="${escapeAttr(feedHref)}">RSS</a></p>
   </footer>
+  <script src="${escapeAttr(themeHref)}" defer></script>
 </body>
 </html>
 `;
@@ -105,6 +132,21 @@ function renderTagLinks(tags: string[]): string {
     })
     .join(" ");
   return `<p class="tags">${links}</p>`;
+}
+
+function postNav(neighbors: PostNeighbors): string {
+  const { newer, older } = neighbors;
+  if (!newer && !older) return "";
+  const newerLink = newer
+    ? `<a class="post-nav-newer" href="${escapeAttr(withBase(postPath(newer.slug)))}"><span class="post-nav-label">Newer</span> ${escapeHtml(newer.title)}</a>`
+    : `<span class="post-nav-newer"></span>`;
+  const olderLink = older
+    ? `<a class="post-nav-older" href="${escapeAttr(withBase(postPath(older.slug)))}"><span class="post-nav-label">Older</span> ${escapeHtml(older.title)}</a>`
+    : `<span class="post-nav-older"></span>`;
+  return `<nav class="post-nav" aria-label="Adjacent posts">
+      ${newerLink}
+      ${olderLink}
+    </nav>`;
 }
 
 function postListItem(post: Post): string {
@@ -145,17 +187,31 @@ export function renderIndexPage(posts: Post[]): string {
   );
 }
 
-export function renderPostPage(post: Post): string {
+export function renderPostPage(
+  post: Post,
+  neighbors: PostNeighbors = {},
+): string {
   const date = formatDate(post.date);
+  const minutes = readingMinutes(post.bodyHtml);
+  const metaBits = [
+    date
+      ? `<time datetime="${escapeAttr(post.date!)}">${date}</time>`
+      : "",
+    `<span class="reading-time">${minutes} min read</span>`,
+  ]
+    .filter(Boolean)
+    .join("");
+
   const body = `    <article class="post">
       <header class="post-header">
         <h1>${escapeHtml(post.title)}</h1>
-        ${date ? `<time datetime="${escapeAttr(post.date!)}">${date}</time>` : ""}
+        <p class="post-meta">${metaBits}</p>
         ${renderTagLinks(post.tags)}
       </header>
       <div class="post-body">
 ${post.bodyHtml}
       </div>
+      ${postNav(neighbors)}
     </article>`;
 
   return layout(

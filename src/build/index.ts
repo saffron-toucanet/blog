@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 import { SITE_URL } from "./config.ts";
 import {
   renderRobotsTxt,
@@ -12,6 +13,7 @@ import {
   DIST_DIR,
   POSTS_DIR,
   PUBLIC_DIR,
+  SCRIPTS_DIR,
   STYLES_DIR,
   postPath,
   tagPath,
@@ -41,6 +43,30 @@ function copyDirIfExists(src: string, dest: string): void {
     } else {
       fs.copyFileSync(from, to);
     }
+  }
+}
+
+/** Emit client scripts from `src/site/scripts/*.ts` → `dist/assets/*.js`. */
+function compileClientScripts(): void {
+  if (!fs.existsSync(SCRIPTS_DIR)) return;
+  const outDir = path.join(DIST_DIR, "assets");
+  ensureDir(outDir);
+  for (const name of fs.readdirSync(SCRIPTS_DIR)) {
+    if (!name.endsWith(".ts")) continue;
+    const source = fs.readFileSync(path.join(SCRIPTS_DIR, name), "utf8");
+    const { outputText } = ts.transpileModule(source, {
+      compilerOptions: {
+        module: ts.ModuleKind.ESNext,
+        target: ts.ScriptTarget.ES2020,
+        removeComments: true,
+      },
+      fileName: name,
+    });
+    // Light minify: collapse runs of whitespace (keep under ~1KB for theme.js).
+    const minified = outputText.replace(/\s+/g, " ").trim() + "\n";
+    const outName = name.replace(/\.ts$/, ".js");
+    fs.writeFileSync(path.join(outDir, outName), minified, "utf8");
+    console.log(`Built script → dist/assets/${outName}`);
   }
 }
 
@@ -81,6 +107,7 @@ export function build(): void {
 
   copyDirIfExists(PUBLIC_DIR, DIST_DIR);
   copyDirIfExists(STYLES_DIR, path.join(DIST_DIR, "assets"));
+  compileClientScripts();
 
   // GitHub Pages custom domain (blog.doxiebytes.com) — overwritten after public/ copy.
   const customDomain = new URL(SITE_URL).hostname;
@@ -104,9 +131,16 @@ export function build(): void {
   writePage(DIST_DIR, renderIndexPage(posts));
   console.log("Built home → dist/index.html");
 
-  for (const post of posts) {
+  const sortedPosts = [...posts].sort((a, b) => {
+    const byDate = (b.date ?? "").localeCompare(a.date ?? "");
+    return byDate !== 0 ? byDate : a.slug.localeCompare(b.slug);
+  });
+  for (let i = 0; i < sortedPosts.length; i++) {
+    const post = sortedPosts[i]!;
+    const newer = i > 0 ? sortedPosts[i - 1] : undefined;
+    const older = i < sortedPosts.length - 1 ? sortedPosts[i + 1] : undefined;
     const outDir = path.join(DIST_DIR, "posts", post.slug);
-    writePage(outDir, renderPostPage(post));
+    writePage(outDir, renderPostPage(post, { newer, older }));
     console.log(`Built post → dist${postPath(post.slug)}index.html`);
   }
 

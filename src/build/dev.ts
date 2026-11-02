@@ -22,6 +22,8 @@ const MIME: Record<string, string> = {
   ".gif": "image/gif",
   ".ico": "image/x-icon",
   ".webp": "image/webp",
+  ".woff2": "font/woff2",
+  ".woff": "font/woff",
 };
 
 function safeJoin(root: string, requestPath: string): string | null {
