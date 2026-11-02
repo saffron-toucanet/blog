@@ -14,7 +14,7 @@
     "node": ">=22"
   },
   "devDependencies": {
-    "@types/node": "^22.13.10",
+    "@types/node": "^26.6.6",
     "chokidar": "^4.0.3",
     "gray-matter": "^4.0.3",
     "marked": "^18.1.2",
