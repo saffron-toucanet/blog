@@ -13,6 +13,7 @@ type PageMeta = {
   title: string;
   description: string;
   canonicalPath: string;
+  noindex?: boolean;
 };
 
 function layout(meta: PageMeta, body: string): string {
@@ -22,6 +23,10 @@ function layout(meta: PageMeta, body: string): string {
   const canonical = absoluteUrl(meta.canonicalPath);
   const cssHref = withBase("/assets/main.css");
   const homeHref = withBase("/");
+  const feedHref = withBase("/feed.xml");
+  const robots = meta.noindex
+    ? `\n  <meta name="robots" content="noindex">`
+    : "";
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -29,8 +34,9 @@ function layout(meta: PageMeta, body: string): string {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>${escapeHtml(pageTitle)}</title>
-  <meta name="description" content="${escapeAttr(description)}">
+  <meta name="description" content="${escapeAttr(description)}">${robots}
   <link rel="canonical" href="${escapeAttr(canonical)}">
+  <link rel="alternate" type="application/rss+xml" title="${escapeAttr(SITE_TITLE)}" href="${escapeAttr(feedHref)}">
   <meta property="og:title" content="${escapeAttr(pageTitle)}">
   <meta property="og:description" content="${escapeAttr(description)}">
   <meta property="og:url" content="${escapeAttr(canonical)}">
@@ -49,7 +55,7 @@ function layout(meta: PageMeta, body: string): string {
 ${body}
   </main>
   <footer class="site-footer">
-    <p><a href="${escapeAttr(homeHref)}">${escapeHtml(SITE_TITLE)}</a> · ${escapeHtml(SITE_URL.replace(/^https?:\/\//, ""))}</p>
+    <p><a href="${escapeAttr(homeHref)}">${escapeHtml(SITE_TITLE)}</a> · ${escapeHtml(SITE_URL.replace(/^https?:\/\//, ""))} · <a href="${escapeAttr(feedHref)}">RSS</a></p>
   </footer>
 </body>
 </html>
@@ -179,6 +185,22 @@ export function renderTagsIndexPage(
       title: "Tags",
       description: `All tags on ${SITE_TITLE}.`,
       canonicalPath: "/tags/",
+    },
+    body,
+  );
+}
+
+export function renderNotFoundPage(): string {
+  const homeHref = withBase("/");
+  const body = `    <h1>Page not found</h1>
+    <p>That URL does not match a post or page. <a href="${escapeAttr(homeHref)}">Back home</a>.</p>`;
+
+  return layout(
+    {
+      title: "Not found",
+      description: `Page not found on ${SITE_TITLE}.`,
+      canonicalPath: "/404.html",
+      noindex: true,
     },
     body,
   );
