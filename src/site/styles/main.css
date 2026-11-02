@@ -1,15 +1,18 @@
 /*
-  Phase 1 — tokens, type, rhythm, graphite paper + ink-blue.
+  Phase 1–2 — tokens, type, rhythm, graphite paper + ink-blue.
   Body stack: Iowan/Palatino/Georgia (local expressive serif; not Inter/Roboto).
   UI stack: Avenir Next / Segoe / system-ui for brand, nav, meta.
+  Phase 2: prefers-color-scheme dark tokens; focus/hit areas; reduced-motion.
 */
 
 :root {
-  color-scheme: light;
+  color-scheme: light dark;
 
-  /* Graphite paper */
+  /* Graphite paper (light) */
   --bg: #e9ecf1;
   --bg-deep: #dde2ea;
+  --bg-glow: #d5dbe6;
+  --bg-bottom: #e6e9f0;
   --surface: #f3f5f8;
   --text: #1a1d22;
   --muted: #4a515c;
@@ -53,8 +56,8 @@ body {
   background-color: var(--bg);
   /* Cool graphite wash — atmosphere without purple/cream clichés */
   background-image:
-    radial-gradient(ellipse 110% 70% at 50% -15%, #d5dbe6 0%, transparent 58%),
-    linear-gradient(180deg, var(--bg-deep) 0%, var(--bg) 32%, #e6e9f0 100%);
+    radial-gradient(ellipse 110% 70% at 50% -15%, var(--bg-glow) 0%, transparent 58%),
+    linear-gradient(180deg, var(--bg-deep) 0%, var(--bg) 32%, var(--bg-bottom) 100%);
   background-attachment: fixed;
   min-height: 100vh;
 }
@@ -77,6 +80,10 @@ a:hover {
 @media (prefers-reduced-motion: reduce) {
   a {
     transition: none;
+  }
+
+  body {
+    background-attachment: scroll;
   }
 }
 
@@ -163,9 +170,12 @@ main,
 }
 
 .site-nav a {
+  display: inline-block;
   color: var(--muted);
   text-decoration: none;
-  margin-inline-end: 1rem;
+  padding: 0.45rem 0.4rem;
+  margin-inline-end: 0.5rem;
+  margin-block: -0.45rem;
 }
 
 .site-nav a:last-child {
@@ -311,6 +321,9 @@ time {
 }
 
 .tag {
+  display: inline-block;
+  padding: 0.4rem 0.2rem;
+  margin-block: -0.2rem;
   color: var(--link);
   text-decoration: underline;
   text-decoration-color: var(--link-underline);
@@ -425,4 +438,23 @@ time {
   padding-inline: var(--space-4);
   border-left: 3px solid var(--border);
   color: var(--muted);
+}
+
+/* Phase 2 — system dark scheme (no toggle yet) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Cool night graphite + brighter ink-blue for link contrast */
+    --bg: #12151a;
+    --bg-deep: #0c0e12;
+    --bg-glow: #1a2230;
+    --bg-bottom: #0f1218;
+    --surface: #1c2129;
+    --text: #e6e9ef;
+    --muted: #9aa3b0;
+    --border: #2e3540;
+    --link: #7eb0e8;
+    --link-underline: #7eb0e866;
+    --code-bg: #1a1f28;
+    --focus: #7eb0e8;
+  }
 }

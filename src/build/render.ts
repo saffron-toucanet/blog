@@ -52,6 +52,7 @@ function layout(meta: PageMeta, body: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <title>${escapeHtml(pageTitle)}</title>
   <meta name="description" content="${escapeAttr(description)}">${robots}
   <link rel="canonical" href="${escapeAttr(canonical)}">
