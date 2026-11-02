@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import ts from "typescript";
+import * as esbuild from "esbuild";
 import { SITE_URL } from "./config.ts";
 import {
   renderRobotsTxt,
@@ -50,24 +50,25 @@ function copyDirIfExists(src: string, dest: string): void {
   }
 }
 
+/** Emit client scripts from `src/site/scripts/*.ts` → `dist/assets/*.js`. */
 function compileClientScripts(): void {
   if (!fs.existsSync(SCRIPTS_DIR)) return;
   const outDir = path.join(DIST_DIR, "assets");
   ensureDir(outDir);
   for (const name of fs.readdirSync(SCRIPTS_DIR)) {
     if (!name.endsWith(".ts")) continue;
-    const source = fs.readFileSync(path.join(SCRIPTS_DIR, name), "utf8");
-    const { outputText } = ts.transpileModule(source, {
-      compilerOptions: {
-        module: ts.ModuleKind.ESNext,
-        target: ts.ScriptTarget.ES2020,
-        removeComments: true,
-      },
-      fileName: name,
-    });
-    const minified = outputText.replace(/\s+/g, " ").trim() + "\n";
+    const entry = path.join(SCRIPTS_DIR, name);
     const outName = name.replace(/\.ts$/, ".js");
-    fs.writeFileSync(path.join(outDir, outName), minified, "utf8");
+    // TypeScript 7 no longer exports transpileModule; esbuild strips types.
+    esbuild.buildSync({
+      entryPoints: [entry],
+      outfile: path.join(outDir, outName),
+      bundle: false,
+      format: "esm",
+      target: "es2020",
+      minify: true,
+      logLevel: "silent",
+    });
     console.log(`Built script → dist/assets/${outName}`);
   }
 }
