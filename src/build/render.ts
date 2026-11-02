@@ -16,6 +16,18 @@ type PageMeta = {
   noindex?: boolean;
 };
 
+function navCurrent(path: string, href: string): string {
+  if (href === "/") {
+    return path === "/" ? ' aria-current="page"' : "";
+  }
+  if (href === "/tags/") {
+    return path === "/tags/" || path.startsWith("/tags/")
+      ? ' aria-current="page"'
+      : "";
+  }
+  return "";
+}
+
 function layout(meta: PageMeta, body: string): string {
   const pageTitle =
     meta.title === SITE_TITLE ? SITE_TITLE : `${meta.title} · ${SITE_TITLE}`;
@@ -23,7 +35,11 @@ function layout(meta: PageMeta, body: string): string {
   const canonical = absoluteUrl(meta.canonicalPath);
   const cssHref = withBase("/assets/main.css");
   const homeHref = withBase("/");
+  const tagsHref = withBase("/tags/");
   const feedHref = withBase("/feed.xml");
+  const path = meta.canonicalPath;
+  const homeCurrent = navCurrent(path, "/");
+  const tagsCurrent = navCurrent(path, "/tags/");
   const robots = meta.noindex
     ? `\n  <meta name="robots" content="noindex">`
     : "";
@@ -45,13 +61,15 @@ function layout(meta: PageMeta, body: string): string {
   <link rel="stylesheet" href="${escapeAttr(cssHref)}">
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <a class="site-title" href="${escapeAttr(homeHref)}">${escapeHtml(SITE_TITLE)}</a>
     <nav class="site-nav" aria-label="Primary">
-      <a href="${escapeAttr(homeHref)}">Home</a>
+      <a href="${escapeAttr(homeHref)}"${homeCurrent}>Home</a>
+      <a href="${escapeAttr(tagsHref)}"${tagsCurrent}>Tags</a>
     </nav>
   </header>
-  <main>
+  <main id="main">
 ${body}
   </main>
   <footer class="site-footer">
