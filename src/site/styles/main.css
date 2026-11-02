@@ -270,6 +270,24 @@ main {
   color: inherit;
 }
 
+.site-footer a:hover {
+  color: var(--text);
+}
+
+.not-found .section-label {
+  margin-bottom: var(--space-2);
+}
+
+.not-found h1 {
+  margin-bottom: var(--space-3);
+}
+
+.not-found-links {
+  margin-top: var(--space-5);
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+}
+
 h1,
 h2,
 h3,
