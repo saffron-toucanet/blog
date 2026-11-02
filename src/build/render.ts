@@ -103,7 +103,7 @@ function layout(meta: PageMeta, body: string): string {
 ${body}
   </main>
   <footer class="site-footer">
-    <p><a href="${escapeAttr(homeHref)}">${escapeHtml(SITE_TITLE)}</a> · ${escapeHtml(SITE_URL.replace(/^https?:\/\//, ""))} · <a href="${escapeAttr(feedHref)}">RSS</a></p>
+    <p><a href="${escapeAttr(homeHref)}">${escapeHtml(SITE_TITLE)}</a> · ${escapeHtml(SITE_URL.replace(/^https?:\/\//, ""))} · <a href="${escapeAttr(tagsHref)}">Tags</a> · <a href="${escapeAttr(feedHref)}">RSS</a></p>
   </footer>
   <script src="${escapeAttr(themeHref)}" defer></script>
 </body>
@@ -272,8 +272,13 @@ export function renderTagsIndexPage(
 
 export function renderNotFoundPage(): string {
   const homeHref = withBase("/");
-  const body = `    <h1>Page not found</h1>
-    <p>That URL does not match a post or page. <a href="${escapeAttr(homeHref)}">Back home</a>.</p>`;
+  const tagsHref = withBase("/tags/");
+  const body = `    <section class="not-found">
+      <p class="section-label">Error</p>
+      <h1>Page not found</h1>
+      <p>That URL does not match a post or page.</p>
+      <p class="not-found-links"><a href="${escapeAttr(homeHref)}">Back home</a> · <a href="${escapeAttr(tagsHref)}">Tags</a></p>
+    </section>`;
 
   return layout(
     {

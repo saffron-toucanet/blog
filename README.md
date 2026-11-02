@@ -54,9 +54,18 @@ Set `draft: true` to keep a post out of the index, tags, feed, sitemap, and Page
 
 - `content/posts/` — Markdown posts with YAML frontmatter
 - `src/build/` — build-time TypeScript (CLI, markdown, templates, feed/sitemap, dev server)
-- `src/site/` — site CSS
-- `public/` — static assets copied into `dist/`
+- `src/site/styles/` — site CSS tokens, type, light/dark
+- `src/site/scripts/` — tiny client scripts (theme toggle)
+- `public/` — static assets copied into `dist/` (fonts, images)
 - Built routes: `/`, `/posts/<slug>/`, `/tags/`, `/tags/<tag>/`, `/feed.xml`, `/sitemap.xml`, `/404.html`
+
+## Look & feel (colophon)
+
+- **Brand / tagline:** doxiebytes — “Dev news, plain.”
+- **Type:** self-hosted Source Serif 4 (body) + Source Sans 3 (UI), with system fallbacks; `font-display: swap`.
+- **Color:** cool graphite paper + ink-blue links; CSS tokens for light and dark.
+- **Theme:** follows `prefers-color-scheme` until you use the header **Light/Dark** toggle (`localStorage` + `data-theme`, no FOUC).
+- **CSS stress post:** [/posts/prose-fixtures/](https://blog.doxiebytes.com/posts/prose-fixtures/) covers `h2`/`h3`, lists, image, blockquote, and `hr`.
 
 ## Deploy (GitHub Pages + Cloudflare)
 
