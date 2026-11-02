@@ -14,6 +14,7 @@ type PageMeta = {
   description: string;
   canonicalPath: string;
   noindex?: boolean;
+  home?: boolean;
 };
 
 function navCurrent(path: string, href: string): string {
@@ -44,6 +45,8 @@ function layout(meta: PageMeta, body: string): string {
     ? `\n  <meta name="robots" content="noindex">`
     : "";
 
+  const bodyClass = meta.home ? ' class="home"' : "";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -60,7 +63,7 @@ function layout(meta: PageMeta, body: string): string {
   <meta property="og:site_name" content="${escapeAttr(SITE_TITLE)}">
   <link rel="stylesheet" href="${escapeAttr(cssHref)}">
 </head>
-<body>
+<body${bodyClass}>
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
     <a class="site-title" href="${escapeAttr(homeHref)}">${escapeHtml(SITE_TITLE)}</a>
@@ -126,7 +129,8 @@ export function renderIndexPage(posts: Post[]): string {
       ? "<p>No posts yet.</p>"
       : `<ul class="post-list">\n${sorted.map(postListItem).join("\n")}\n</ul>`;
 
-  const body = `    <h1>Posts</h1>
+  const body = `    <p class="site-intro">${escapeHtml(SITE_DESCRIPTION)}</p>
+    <h1 class="section-label">Posts</h1>
     ${list}`;
 
   return layout(
@@ -134,6 +138,7 @@ export function renderIndexPage(posts: Post[]): string {
       title: SITE_TITLE,
       description: SITE_DESCRIPTION,
       canonicalPath: "/",
+      home: true,
     },
     body,
   );
