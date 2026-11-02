@@ -1,11 +1,17 @@
 ---
 title: Hello world
-date: 2026-11-02
-description: First post.
+date: "2026-11-02"
+description: First post on the doxiebytes blog.
 draft: false
 tags: [meta]
 ---
 
-Post body in **Markdown**.
+Welcome to the static blog. Posts are Markdown with YAML frontmatter, built to plain HTML.
 
-This file proves the Phase A build path: frontmatter via `gray-matter`, body via `marked`.
+Here is a short code sample for the Phase B stylesheet:
+
+```ts
+console.log("hello from doxiebytes");
+```
+
+Tagged **meta** so the `/tags/meta/` page has something to list.
