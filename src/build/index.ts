@@ -1,6 +1,12 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { SITE_URL } from "./config.ts";
+import {
+  renderRobotsTxt,
+  renderRssFeed,
+  renderSitemap,
+} from "./feed.ts";
 import { loadPost, tagSlug, type Post } from "./markdown.ts";
 import {
   DIST_DIR,
@@ -12,6 +18,7 @@ import {
 } from "./paths.ts";
 import {
   renderIndexPage,
+  renderNotFoundPage,
   renderPostPage,
   renderTagPage,
   renderTagsIndexPage,
@@ -42,13 +49,12 @@ function writePage(dir: string, html: string): void {
   fs.writeFileSync(path.join(dir, "index.html"), html, "utf8");
 }
 
-function loadPosts(): Post[] {
+function loadAllPosts(): Post[] {
   if (!fs.existsSync(POSTS_DIR)) return [];
   return fs
     .readdirSync(POSTS_DIR)
     .filter((f) => f.endsWith(".md"))
-    .map((filename) => loadPost(path.join(POSTS_DIR, filename), filename))
-    .filter((post) => !post.draft);
+    .map((filename) => loadPost(path.join(POSTS_DIR, filename), filename));
 }
 
 function buildTagMap(posts: Post[]): Map<string, { label: string; posts: Post[] }> {
@@ -68,8 +74,8 @@ function buildTagMap(posts: Post[]): Map<string, { label: string; posts: Post[] 
   return map;
 }
 
-function build(): void {
-  // Fresh dist each build.
+/** Build the static site into `dist/`. Draft posts are excluded. */
+export function build(): void {
   fs.rmSync(DIST_DIR, { recursive: true, force: true });
   ensureDir(DIST_DIR);
 
@@ -81,7 +87,16 @@ function build(): void {
   fs.writeFileSync(path.join(DIST_DIR, "CNAME"), `${customDomain}\n`, "utf8");
   console.log(`Wrote CNAME → dist/CNAME (${customDomain})`);
 
-  const posts = loadPosts();
+  const allPosts = loadAllPosts();
+  const drafts = allPosts.filter((p) => p.draft);
+  const posts = allPosts.filter((p) => !p.draft);
+
+  if (drafts.length > 0) {
+    console.log(
+      `Skipped ${drafts.length} draft post(s): ${drafts.map((p) => p.slug).join(", ")}`,
+    );
+  }
+
   if (posts.length === 0) {
     throw new Error(`No published Markdown posts found in ${POSTS_DIR}`);
   }
@@ -111,6 +126,28 @@ function build(): void {
     writePage(path.join(DIST_DIR, "tags", slug), renderTagPage(label, tagged));
     console.log(`Built tag → dist${tagPath(slug)}index.html`);
   }
+
+  fs.writeFileSync(path.join(DIST_DIR, "404.html"), renderNotFoundPage(), "utf8");
+  console.log("Built 404 → dist/404.html");
+
+  fs.writeFileSync(path.join(DIST_DIR, "feed.xml"), renderRssFeed(posts), "utf8");
+  console.log("Built feed → dist/feed.xml");
+
+  fs.writeFileSync(
+    path.join(DIST_DIR, "sitemap.xml"),
+    renderSitemap(posts, tags),
+    "utf8",
+  );
+  console.log("Built sitemap → dist/sitemap.xml");
+
+  fs.writeFileSync(path.join(DIST_DIR, "robots.txt"), renderRobotsTxt(), "utf8");
+  console.log("Built robots → dist/robots.txt");
 }
 
-build();
+const isMain =
+  process.argv[1] !== undefined &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isMain) {
+  build();
+}

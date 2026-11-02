@@ -6,10 +6,12 @@
   "type": "module",
   "scripts": {
     "build": "tsx src/build/index.ts",
+    "dev": "tsx src/build/dev.ts",
     "clean": "rm -rf dist"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
+    "chokidar": "^4.0.3",
     "gray-matter": "^4.0.3",
     "marked": "^15.0.7",
     "tsx": "^4.19.3",

@@ -2,30 +2,61 @@
 
 Static Markdown blog for [blog.doxiebytes.com](https://blog.doxiebytes.com).
 
-Plain TypeScript build → static HTML/CSS. No runtime frameworks. Deployed to GitHub Pages via Actions (`BASE_PATH=/`).
+Plain TypeScript build → static HTML/CSS. No runtime frameworks. Deployed to GitHub Pages via Actions (`SITE_URL=https://blog.doxiebytes.com`, `BASE_PATH=/`).
 
-## Develop
+## Build
 
 ```bash
 npm install
 npm run build
 ```
 
-Output lands in `dist/` (includes a `CNAME` for `blog.doxiebytes.com`). Preview with any static server, e.g. `npx serve dist`.
+Output lands in `dist/` (HTML pages, `feed.xml`, `sitemap.xml`, `robots.txt`, `404.html`, and a `CNAME` for `blog.doxiebytes.com`).
+
+Preview once:
+
+```bash
+npx serve dist
+```
+
+## Dev (watch)
+
+Rebuild on content/template/style changes and serve `dist/`:
+
+```bash
+npm run dev
+```
+
+Open http://127.0.0.1:4173/ (override with `PORT=…`).
 
 ## Add a post
 
-1. Create `content/posts/YYYY-MM-DD-slug.md` with frontmatter (`title`, `date`, `description`, `tags`, optional `draft` / `slug`).
-2. Run `npm run build` (or push to `main` and let CI build + deploy).
-3. Open `dist/posts/<slug>/`.
+1. Create `content/posts/YYYY-MM-DD-slug.md` with frontmatter:
+
+   ```yaml
+   ---
+   title: Post title
+   date: "2026-11-02"
+   description: One-line summary for listings and SEO.
+   draft: false
+   tags: [meta]
+   # slug: optional-override
+   ---
+   ```
+
+2. Write the Markdown body.
+3. Run `npm run build` (or `npm run dev`), or push to `main` and let CI deploy.
+4. Open `dist/posts/<slug>/` (or the live URL after deploy).
+
+Set `draft: true` to keep a post out of the index, tags, feed, sitemap, and Pages deploy. See `content/posts/2026-11-02-draft-example.md`.
 
 ## Layout
 
 - `content/posts/` — Markdown posts with YAML frontmatter
-- `src/build/` — build-time TypeScript (CLI, markdown, templates)
-- `src/site/` — site CSS (and later optional client scripts)
+- `src/build/` — build-time TypeScript (CLI, markdown, templates, feed/sitemap, dev server)
+- `src/site/` — site CSS
 - `public/` — static assets copied into `dist/`
-- Built routes: `/`, `/posts/<slug>/`, `/tags/`, `/tags/<tag>/`
+- Built routes: `/`, `/posts/<slug>/`, `/tags/`, `/tags/<tag>/`, `/feed.xml`, `/sitemap.xml`, `/404.html`
 
 ## Deploy (GitHub Pages + Cloudflare)
 
@@ -55,6 +86,5 @@ No A/AAAA records are required for the `blog` subdomain.
 
 ### Smoke check
 
-1. Merge the Pages workflow to `main` and confirm the **Deploy GitHub Pages** Action succeeds.
-2. Confirm `https://saffron-toucanet.github.io/blog/` or the Pages environment URL serves the site (until the custom domain is live).
-3. After DNS + custom domain + Enforce HTTPS: open `https://blog.doxiebytes.com/`.
+1. Confirm the **Deploy GitHub Pages** Action on `main` succeeds.
+2. Open `https://blog.doxiebytes.com/` (or the Pages environment URL before DNS is live).
