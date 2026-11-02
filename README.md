@@ -38,6 +38,8 @@ tags: [meta]
 
 Write Markdown (no raw HTML). Build or push to `main` to deploy.
 
+Agents/automations: Cursor skills live under [`.cursor/skills/`](.cursor/skills/) (`blog-writing`, `new-blog-post`, `dev-news-curator`).
+
 ## Deploy
 
 PRs: `npm ci` → typecheck → build. Push to `main`: also deploy Pages.
