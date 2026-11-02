@@ -1,7 +1,8 @@
 import fs from "node:fs";
+import { Marked } from "marked";
 import matter from "gray-matter";
-import { marked } from "marked";
-import { slugFromFilename, slugifyTag } from "./paths.ts";
+import { escapeAttr, escapeHtml } from "./html.ts";
+import { slugFromFilename, slugifyTag, withBase } from "./paths.ts";
 
 export type PostFrontmatter = {
   title?: string;
@@ -22,6 +23,60 @@ export type Post = {
   bodyHtml: string;
   filename: string;
 };
+
+/**
+ * Markdown → HTML policy: no raw HTML; only http(s)/mailto/relative URLs.
+ * Site-absolute paths (`/…`) are rewritten with BASE_PATH.
+ */
+function isSafeHref(href: string): boolean {
+  const trimmed = href.trim();
+  if (!trimmed) return false;
+  // Block dangerous schemes (also after leading whitespace / control chars).
+  if (/^[\s\u0000-\u001F]*(?:javascript|data|vbscript|file)\s*:/i.test(trimmed)) {
+    return false;
+  }
+  return true;
+}
+
+function rewriteHref(href: string): string {
+  const trimmed = href.trim();
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//")) {
+    return withBase(trimmed);
+  }
+  return trimmed;
+}
+
+const marked = new Marked();
+marked.use({
+  // Disable raw HTML tokens so tags are escaped as text (not executed, and
+  // not greedily absorbed into HTML blocks that would drop following Markdown).
+  tokenizer: {
+    html() {
+      return undefined;
+    },
+    tag() {
+      return undefined;
+    },
+  },
+  renderer: {
+    html() {
+      return "";
+    },
+    link({ href, title, tokens }) {
+      const text = this.parser.parseInline(tokens);
+      if (!href || !isSafeHref(href)) return text;
+      const safe = rewriteHref(href);
+      const titleAttr = title ? ` title="${escapeAttr(title)}"` : "";
+      return `<a href="${escapeAttr(safe)}"${titleAttr}>${text}</a>`;
+    },
+    image({ href, title, text }) {
+      if (!href || !isSafeHref(href)) return escapeHtml(text || "");
+      const safe = rewriteHref(href);
+      const titleAttr = title ? ` title="${escapeAttr(title)}"` : "";
+      return `<img src="${escapeAttr(safe)}" alt="${escapeAttr(text)}"${titleAttr}>`;
+    },
+  },
+});
 
 /** Parse YAML frontmatter + Markdown body → HTML fragment. */
 export function parseMarkdownFile(filePath: string): {
@@ -59,6 +114,15 @@ export function loadPost(filePath: string, filename: string): Post {
   const tags = (frontmatter.tags ?? [])
     .map((t) => String(t).trim())
     .filter(Boolean);
+
+  const emptySlugTags = tags.filter((t) => !slugifyTag(t));
+  if (emptySlugTags.length > 0) {
+    throw new Error(
+      `Post ${filename}: tag(s) slugify to empty string: ${emptySlugTags
+        .map((t) => JSON.stringify(t))
+        .join(", ")}`,
+    );
+  }
 
   return {
     slug: frontmatter.slug ?? slugFromFilename(filename),

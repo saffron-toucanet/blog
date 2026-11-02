@@ -4,7 +4,10 @@ import { absoluteUrl, postPath, tagPath } from "./paths.ts";
 import { escapeXml } from "./xml.ts";
 
 function sortByDateDesc(posts: Post[]): Post[] {
-  return [...posts].sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""));
+  return [...posts].sort((a, b) => {
+    const byDate = (b.date ?? "").localeCompare(a.date ?? "");
+    return byDate !== 0 ? byDate : a.slug.localeCompare(b.slug);
+  });
 }
 
 function rfc822Date(date: string | undefined): string {
@@ -12,10 +15,17 @@ function rfc822Date(date: string | undefined): string {
   return d.toUTCString();
 }
 
+/** Stable channel lastBuildDate: newest post date (not wall-clock build time). */
+function lastBuildDate(posts: Post[]): string {
+  const newest = sortByDateDesc(posts).find((p) => p.date)?.date;
+  return rfc822Date(newest);
+}
+
 /** RSS 2.0 feed at /feed.xml */
 export function renderRssFeed(posts: Post[]): string {
   const sorted = sortByDateDesc(posts);
   const channelLink = absoluteUrl("/");
+  const feedSelf = absoluteUrl("/feed.xml");
   const items = sorted
     .map((post) => {
       const link = absoluteUrl(postPath(post.slug));
@@ -31,13 +41,14 @@ export function renderRssFeed(posts: Post[]): string {
     .join("\n");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escapeXml(SITE_TITLE)}</title>
     <link>${escapeXml(channelLink)}</link>
     <description>${escapeXml(SITE_DESCRIPTION)}</description>
     <language>en-us</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <atom:link href="${escapeXml(feedSelf)}" rel="self" type="application/rss+xml"/>
+    <lastBuildDate>${lastBuildDate(posts)}</lastBuildDate>
 ${items}
   </channel>
 </rss>
