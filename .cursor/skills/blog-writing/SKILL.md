@@ -9,7 +9,7 @@ description: >-
 
 # Blog writing for doxiebytes
 
-You are drafting or editing posts for a small static Markdown blog (**doxiebytes**, `blog.doxiebytes.com`). Site tagline: **“Dev news, plain.”** Positioning: **daily developer / tech news notes**. Audience: developers and technical builders.
+You are drafting or editing posts for a small static Markdown blog (**doxiebytes**, `blog.doxiebytes.com`). Positioning: **weekly developer / tech news notes**. Audience: developers and technical builders.
 
 ### Locked house voice (do not re-ask unless the user changes it)
 
@@ -20,7 +20,7 @@ You are drafting or editing posts for a small static Markdown blog (**doxiebytes
 | Opinions | Opinionated; say what you’d ship or skip; name when advice fails |
 | Humor | Dry OK; never punch-up hype or meme spam |
 | Hype | Low — no “excited to announce,” no era-framing |
-| Lead | What **shipped**, **broke**, or **mattered** today / this week |
+| Lead | What **shipped**, **broke**, or **mattered** this week |
 | Audience fit | Assume readers know git, APIs, deploys; explain niche terms once |
 
 Follow this skill end-to-end. Fix causes (vagueness, missing judgment), not just flagged words.
@@ -28,7 +28,7 @@ Follow this skill end-to-end. Fix causes (vagueness, missing judgment), not just
 ## When to use
 
 - New post from notes, a bug story, a decision writeup, or a personal essay.
-- **Daily Dev Digest posts** when the user or the daily automation explicitly requests post type **digest** (see Structure → Digest).
+- **Weekly Dev Digest posts** when the user or the Sunday-morning automation explicitly requests post type **digest** (see Structure → Digest).
 - Rewrite / de-slop an existing draft.
 - Review a post before publish (`draft: false`).
 
@@ -60,7 +60,7 @@ Rules:
 ## Workflow (always)
 
 1. **Collect inputs** (from the user or repo). Minimum:
-   - One-sentence claim or question the post answers (for **digest** posts: the day’s roundup is the claim — e.g. “Dev Digest for DATE”).
+   - One-sentence claim or question the post answers (for **digest** posts: the week’s roundup is the claim — e.g. “Weekly Dev Digest for DATE”).
    - Audience in one line (who, with what problem).
    - Evidence: notes, numbers, error text, failed attempts, decisions, scenes — *only what is real* (for digests: verified primary URLs + curator takeaways).
    - Post type: technical | personal | meta | **digest**.
@@ -80,10 +80,10 @@ Voice is **stance + specificity + rhythm**, not adjectives. Apply the locked hou
 - Prefer `I` for lived work; name tools, versions, constraints.
 - Take a side; name when the advice fails.
 - Vary sentence length. Short sentences are fine after a long one.
-- Contractions, informal where natural. Talk like a sharp teammate writing the daily note.
+- Contractions, informal where natural. Talk like a sharp teammate writing the weekly note.
 - One through-line per post. Cut side quests that don’t serve the claim.
 - For news-ish posts (non-digest): lead with the change, then why it matters, then your take — not a roundup of “top 5.”
-- For **digest** posts (only when requested): the through-line *is* the day’s curated set — keep Top Story + Highlights structure; do not collapse into a single-item essay.
+- For **digest** posts (only when requested): the through-line *is* the week’s curated set — keep Top Story + Highlights structure; do not collapse into a single-item essay.
 
 **Don’t:**
 
@@ -120,6 +120,21 @@ Open on the **fact, error, decision, or odd observation** — not the era.
 Personal posts may open on a scene. Still make the stake clear by sentence three.
 
 Write or rewrite the **first line last**, from the strongest concrete point in the piece.
+
+### Digest openings (banned patterns)
+
+Digests open **plainly** on what mattered this week — dry-warm first-person is fine. Do **not**:
+
+- Count items as the lede (“Four things…”, “Three releases…”, “Five links I’d…”)
+- Frame the roundup as what you’d “put in front of another engineer” (or similar performative peer-staging)
+- Lead with a cute contrast punch like “One of them is a database I would not deploy”
+
+| Bad | Better |
+|---|---|
+| Four things I'd actually put in front of another engineer today. One of them is a database I would not deploy. | Quiet week on runtimes; the useful stuff was tooling and one security note. |
+| Three links I’d hand a teammate before standup. | What mattered this week: a .NET servicing release, a React RFC, and one postmortem worth the time. |
+
+The first line should say what the week’s digest is about, then move into Top Story / Highlights.
 
 ---
 
@@ -178,16 +193,18 @@ Code: shortest runnable or copy-pastable fragment that proves the point. Name ve
 
 Short. One job (e.g. “drafts are excluded from the feed”). No journey narrative.
 
-### Digest (daily Dev Digest — only when requested)
+### Digest (weekly Dev Digest — only when requested)
 
-**Conflict note:** Default news-ish posts prefer **one** lead, not a top-N card list. That default is **overridden** when the user or the daily automation explicitly sets post type **digest** (see the daily automation prompt / house digest rules). In that case a curated roundup **is** the allowed post shape.
+**Conflict note:** Default news-ish posts prefer **one** lead, not a top-N card list. That default is **overridden** when the user or the weekly (Sunday-morning) automation explicitly sets post type **digest** (see the weekly automation prompt / house digest rules). In that case a curated roundup **is** the allowed post shape.
 
-- Title like `Dev Digest — YYYY-MM-DD`.
+- Title like `Weekly Dev Digest — YYYY-MM-DD` (Sunday’s date).
+- Filename for automation digests: `content/posts/YYYY-MM-DD-dev-digest.md`.
 - Body follows curator structure: Top Story, Highlights (and optional Worth Reading / On the Radar).
 - House voice adapted for a roundup: first-person takes OK, still dry-warm / low hype.
+- Open plainly (what mattered this week) — see **Digest openings (banned patterns)** above.
 - Every item needs a **verified** primary URL — never invent links.
 - Do **not** expand one digest item into a longform technical/personal post unless the user explicitly asks for that separate piece.
-- Quiet days: fewer items; never pad with invented stories.
+- Quiet weeks: fewer items; never pad with invented stories.
 
 ### Titles
 
@@ -197,7 +214,7 @@ Prefer searchable outcomes over clever mysteries:
 - Bad: `The Day the Database Fought Back`
 - Good: `Why this blog stays framework-free`
 - Bad: `Reimagining the Future of My Content Journey`
-- Good (digest only): `Dev Digest — 2026-11-02`
+- Good (digest only): `Weekly Dev Digest — 2026-11-02`
 
 ---
 
@@ -302,6 +319,7 @@ Replace with a plain word **or cut the sentence** if nothing concrete remains. D
 - Close with a motivational poster.
 - Paste assistant chat tone into the article.
 - Ship `draft: false` with `[need: …]` placeholders still present.
+- Open a digest with counting-as-lede or “put in front of another engineer” framing.
 
 ---
 
@@ -321,12 +339,13 @@ Replace with a plain word **or cut the sentence** if nothing concrete remains. D
 - [ ] No stacked hedges; conditions named  
 - [ ] No vague “studies/experts” without names  
 - [ ] Lists uneven and fully earned (not forced threes)  
-- [ ] ≤1 deliberate “not X, it’s Y” (preferably zero)  
+- [ ] ≤1 deliberate “not X, it’s Y” (prefer zero)  
 - [ ] No Moreover/Furthermore/Additionally parade; no “In conclusion”  
 - [ ] Sentence length varies  
 - [ ] Ending adds a fact, decision, or real question — not a recap  
 - [ ] No invented specifics  
 - [ ] Nothing left that could sit unchanged on a random corporate blog  
+- [ ] Digest lede (if digest): plain “what mattered this week,” not counting / peer-staging tricks  
 
 ### Publish
 
