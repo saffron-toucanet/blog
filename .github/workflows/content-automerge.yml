@@ -1,8 +1,11 @@
-# Auto-squash-merge PRs that only touch content/ and are authored by an
-# allowlisted login (default: repository owner, saffron-toucanet).
+# Auto-squash-merge PRs that only touch content/ when an allowlisted login is
+# the PR author or a commit author/co-author (default allowlist: repository
+# owner, saffron-toucanet). Cursor Agent PRs often show PR author app/cursor
+# with Co-authored-by the owner — those count via commit authors.
 #
 # Author allowlist: repo variable CONTENT_AUTOMERGE_AUTHORS (comma-separated).
-# When unset, falls back to github.repository_owner.
+# When unset, falls back to github.repository_owner. Bots (Dependabot, etc.)
+# are skipped unless an allowlisted login appears as author or commit author.
 #
 # Required repo settings (Settings → General → Pull Requests):
 #   - Allow auto-merge (recommended; queue job uses gh pr merge --auto)
@@ -15,6 +18,7 @@
 #
 # GH_REPO must be set: jobs do not check out the repo, and without it `gh`
 # fails with "fatal: not a git repository" (queue then falsely skipped).
+# Do not call GET /users/{login} for PR authors — app/cursor 404s.
 name: Content auto-merge
 
 on:
@@ -38,8 +42,7 @@ jobs:
   queue:
     if: >
       github.event_name == 'pull_request' &&
-      github.event.pull_request.draft == false &&
-      github.event.pull_request.user.type != 'Bot'
+      github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
     steps:
       - name: Queue squash auto-merge when eligible
@@ -47,26 +50,36 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
-          AUTHOR: ${{ github.event.pull_request.user.login }}
           OWNER: ${{ github.repository_owner }}
           ALLOWLIST_VAR: ${{ vars.CONTENT_AUTOMERGE_AUTHORS }}
         run: |
           set -euo pipefail
 
           allowlist="${ALLOWLIST_VAR:-$OWNER}"
-          echo "Author filter: allowlist='$allowlist' (default owner='$OWNER'); PR author='$AUTHOR'"
+          meta="$(gh pr view "$PR" --json author,commits)"
+          author="$(echo "$meta" | jq -r .author.login)"
+          mapfile -t candidates < <(echo "$meta" | jq -r '
+            ([.author.login] + [.commits[].authors[]?.login // empty])
+            | map(select(. != null and . != ""))
+            | unique | .[]
+          ')
+          echo "Author filter: allowlist='$allowlist' (default owner='$OWNER')"
+          echo "PR author='$author'; candidates=${candidates[*]-}"
 
           allowed=false
           IFS=',' read -ra entries <<< "$allowlist"
-          for entry in "${entries[@]}"; do
-            entry="$(echo "$entry" | tr -d '[:space:]')"
-            if [[ -n "$entry" && "$entry" == "$AUTHOR" ]]; then
-              allowed=true
-              break
-            fi
+          for login in "${candidates[@]+"${candidates[@]}"}"; do
+            for entry in "${entries[@]}"; do
+              entry="$(echo "$entry" | tr -d '[:space:]')"
+              if [[ -n "$entry" && "$entry" == "$login" ]]; then
+                allowed=true
+                echo "Allowlisted via login='$login'"
+                break 2
+              fi
+            done
           done
           if [[ "$allowed" != true ]]; then
-            echo "Skip: author '$AUTHOR' not in CONTENT_AUTOMERGE_AUTHORS / owner allowlist"
+            echo "Skip: no allowlisted PR/commit author (bots without allowlisted co-author stay skipped)"
             exit 0
           fi
 
@@ -127,13 +140,12 @@ jobs:
             exit 0
           fi
 
-          meta="$(gh pr view "$pr" --json number,isDraft,author,mergeable,state,autoMergeRequest)"
+          meta="$(gh pr view "$pr" --json number,isDraft,author,mergeable,state,autoMergeRequest,commits)"
           echo "$meta"
 
           state="$(echo "$meta" | jq -r .state)"
           draft="$(echo "$meta" | jq -r .isDraft)"
           author="$(echo "$meta" | jq -r .author.login)"
-          author_type="$(gh api "users/$author" --jq .type)"
           mergeable="$(echo "$meta" | jq -r .mergeable)"
           already_auto="$(echo "$meta" | jq -r '.autoMergeRequest != null')"
 
@@ -145,24 +157,29 @@ jobs:
             echo "Skip: draft PR"
             exit 0
           fi
-          if [[ "$author_type" == "Bot" ]]; then
-            echo "Skip: bot author '$author'"
-            exit 0
-          fi
 
           allowlist="${ALLOWLIST_VAR:-$OWNER}"
-          echo "Author filter: allowlist='$allowlist'; PR author='$author'"
+          mapfile -t candidates < <(echo "$meta" | jq -r '
+            ([.author.login] + [.commits[].authors[]?.login // empty])
+            | map(select(. != null and . != ""))
+            | unique | .[]
+          ')
+          echo "Author filter: allowlist='$allowlist'; PR author='$author'; candidates=${candidates[*]-}"
+
           allowed=false
           IFS=',' read -ra entries <<< "$allowlist"
-          for entry in "${entries[@]}"; do
-            entry="$(echo "$entry" | tr -d '[:space:]')"
-            if [[ -n "$entry" && "$entry" == "$author" ]]; then
-              allowed=true
-              break
-            fi
+          for login in "${candidates[@]+"${candidates[@]}"}"; do
+            for entry in "${entries[@]}"; do
+              entry="$(echo "$entry" | tr -d '[:space:]')"
+              if [[ -n "$entry" && "$entry" == "$login" ]]; then
+                allowed=true
+                echo "Allowlisted via login='$login'"
+                break 2
+              fi
+            done
           done
           if [[ "$allowed" != true ]]; then
-            echo "Skip: author '$author' not allowlisted"
+            echo "Skip: no allowlisted PR/commit author"
             exit 0
           fi
 
