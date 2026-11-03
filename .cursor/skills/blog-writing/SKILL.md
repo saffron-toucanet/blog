@@ -15,15 +15,18 @@ You are drafting or editing posts for a small static Markdown blog (**doxiebytes
 
 | Axis | Choice |
 |---|---|
-| Tone | Dry-warm with a light edge — friendly teammate, not cheerleader |
+| Tone | Warm-natural with a light edge — sharp teammate talking shop, not cheerleader, not sterile bulletin |
 | Person | First-person **I** (lived work / takes); unsigned brand voice only if asked |
 | Opinions | Opinionated; say what you’d ship or skip; name when advice fails |
 | Humor | Dry OK; never punch-up hype or meme spam |
 | Hype | Low — no “excited to announce,” no era-framing |
 | Lead | What **shipped**, **broke**, or **mattered** this week |
 | Audience fit | Assume readers know git, APIs, deploys; explain niche terms once |
+| Register ban | Do **not** default to stiff security-advisory speak (CVE catalogs, “you are in scope if…”, patch-matrix laundry lists as the house voice) |
 
-Follow this skill end-to-end. Fix causes (vagueness, missing judgment), not just flagged words.
+**Warm-natural means:** contractions, varied rhythm, a real take in plain words — like Slack to a peer after you’ve actually read the release notes. Still low-hype and first-person. Not corporate-bland, not CVE-bulletin, not “thrilled to share.”
+
+Follow this skill end-to-end. Fix causes (vagueness, missing judgment, sterile register), not just flagged words.
 
 ## When to use
 
@@ -80,24 +83,37 @@ Voice is **stance + specificity + rhythm**, not adjectives. Apply the locked hou
 - Prefer `I` for lived work; name tools, versions, constraints.
 - Take a side; name when the advice fails.
 - Vary sentence length. Short sentences are fine after a long one.
-- Contractions, informal where natural. Talk like a sharp teammate writing the weekly note.
+- Contractions, informal where natural. Talk like a sharp teammate writing the weekly note — warmer and more spoken than a press release or advisory.
 - One through-line per post. Cut side quests that don’t serve the claim.
 - For news-ish posts (non-digest): lead with the change, then why it matters, then your take — not a roundup of “top 5.”
-- For **digest** posts (only when requested): the through-line *is* the week’s curated set — keep Top Story + Highlights structure; do not collapse into a single-item essay.
+- For **digest** posts (only when requested): the through-line *is* the week’s curated set — keep Top Story + Highlights (+ Worth Reading / Security / On the Radar as below); do not collapse into a single-item essay.
 
 **Don’t:**
 
 - Fake enthusiasm (“Incredible!”, “I’m so excited to share…”).
 - Invent a mascot voice, catchphrases, or “brand personality” beyond the locked table.
 - Both-sides then shrug (“it depends on your unique needs”).
-- Sound like documentation written by committee or a chatbot reply.
+- Sound like documentation written by committee, a chatbot reply, or a **security advisory restated as blog prose**.
 - Ask the user again for tone/humor/person unless they contradict the locked voice.
+- Default digests into CVE enumeration, “you are in scope if…”, or patch-version matrices as the Top Story voice. Security belongs in the optional bottom **Security** section (see Digest), written briefly and practically.
 
 **If a post needs a sharper or softer register than the house voice,** ask once; do not invent a flamboyant brand persona.
 
 ### Character test
 
 Delete the site name from the draft. If nothing left is personal judgment, a lived detail, or a concrete constraint, the piece has no character — add real material or stop.
+
+### Digest voice (extra)
+
+Digests should still sound like **you** skimmed the week and pulled what you’d actually click — not a KEV digest with a first-person sticker on it.
+
+| Sterile / advisory (avoid as default) | Warm-natural (prefer) |
+|---|---|
+| CISA added CVE-… on DATE. You are in scope if the process decompresses Brotli through… | I’d roll the .NET OOB if you decompress Brotli anywhere in the request path — details and builds in Security below. |
+| The catalog entry is an unchecked return value… can corrupt adjacent decoder state… | Patch note is blunt: crafted stream → bad decoder state. Practical bit is which apps actually hit it. |
+| Codename Lithium, with updates through the end of April 2029. The release note says the only change… | Node 26 is LTS now. Same bits as the prior security cut, mostly a label — still the line I’d stay on vs the 27 alpha. |
+
+Keep facts honest. Warmth is rhythm and judgment, not fluff.
 
 ---
 
@@ -123,18 +139,20 @@ Write or rewrite the **first line last**, from the strongest concrete point in t
 
 ### Digest openings (banned patterns)
 
-Digests open **plainly** on what mattered this week — dry-warm first-person is fine. Do **not**:
+Digests open **plainly** on what mattered this week — warm first-person is fine. Lead with **stack / product / language** news when you have it, not a security headline by default. Do **not**:
 
 - Count items as the lede (“Four things…”, “Three releases…”, “Five links I’d…”)
 - Frame the roundup as what you’d “put in front of another engineer” (or similar performative peer-staging)
 - Lead with a cute contrast punch like “One of them is a database I would not deploy”
+- Open as a CVE / KEV bulletin when the week also had real stack news
 
 | Bad | Better |
 |---|---|
-| Four things I'd actually put in front of another engineer today. One of them is a database I would not deploy. | Quiet week on runtimes; the useful stuff was tooling and one security note. |
-| Three links I’d hand a teammate before standup. | What mattered this week: a .NET servicing release, a React RFC, and one postmortem worth the time. |
+| Four things I'd actually put in front of another engineer today. One of them is a database I would not deploy. | Quiet week on runtimes; the useful stuff was tooling and a couple of deep reads. |
+| Three links I’d hand a teammate before standup. | What mattered this week: a .NET servicing drop, a React RFC, and one postmortem worth the time. |
+| CISA put CVE-… on the known-exploited list, and the .NET out-of-band… | Stack week: Node 26 went LTS, Flutter shipped a small hotfix, and there’s a solid React deep-dive in Worth Reading. Security notes at the bottom. |
 
-The first line should say what the week’s digest is about, then move into Top Story / Highlights.
+The first line should say what the week’s digest is about (prefer stack themes), then move into Top Story / Highlights.
 
 ---
 
@@ -199,9 +217,16 @@ Short. One job (e.g. “drafts are excluded from the feed”). No journey narrat
 
 - Title like `Weekly Dev Digest — YYYY-MM-DD` (Sunday’s date).
 - Filename for automation digests: `content/posts/YYYY-MM-DD-dev-digest.md`.
-- Body follows curator structure: Top Story, Highlights (and optional Worth Reading / On the Radar).
-- House voice adapted for a roundup: first-person takes OK, still dry-warm / low hype.
-- Open plainly (what mattered this week) — see **Digest openings (banned patterns)** above.
+- Body follows curator structure:
+  1. **Top Story** — best stack / product / language item (not security by default)
+  2. **Highlights** — bulk of the week’s stack news
+  3. **Worth Reading** (optional) — longer-form / deep reads
+  4. **Security** (optional, **bottom**) — capped advisories / patches; must not dominate the post
+  5. **On the Radar** (optional) — early signals / RFCs
+- House voice adapted for a roundup: first-person takes OK, warm-natural / low hype — **not** advisory-bulletin register.
+- Open plainly (what mattered this week; prefer stack themes) — see **Digest openings (banned patterns)** above.
+- Item count: aim **~12–20** verified items when the week is rich (curator owns the mix). Quiet weeks can be fewer; never pad. Do not invent items to hit a number.
+- Mix: center .NET, TypeScript/React, Rust, Flutter, Web, AI/dev tooling. Security is optional and bottom-weighted — see curator skill for caps.
 - Every item needs a **verified** primary URL — never invent links.
 - Do **not** expand one digest item into a longform technical/personal post unless the user explicitly asks for that separate piece.
 - Quiet weeks: fewer items; never pad with invented stories.
@@ -288,6 +313,10 @@ Delete: `Sure!`, `Great question`, `Here's the thing`, `Let's unpack`, `I hope t
 - Sentence-case headings; sparse bold.
 - Don’t turn every paragraph into a bullet list.
 
+### 11. Sterile advisory register (digests especially)
+
+Cut or rewrite when the whole piece reads like a pasted MSRC/CISA note: long CVE restatements, “remote unauthenticated attacker” boilerplate, “you are in scope if” trees, and version matrices with no human take. Keep the versions and the “should I care?” judgment; drop the bulletin voice.
+
 ### Words that often cluster in slop
 
 `delve`, `tapestry`, `landscape`, `navigate`, `leverage`, `showcase`, `underscore`, `pivotal`, `multifaceted`, `nuanced`, `foster`, `harness`, `vibrant`, `nestled`, `testament`, `realm`, `utilize`.
@@ -299,11 +328,11 @@ Replace with a plain word **or cut the sentence** if nothing concrete remains. D
 ## Editing passes (in order)
 
 1. **Cut** — Remove summary sections, filler CTAs, restated intros, vacuous paragraphs. Expect to lose words without losing content.
-2. **Structure** — Answer near top; break false balance; uneven lists; one job per section; headings useful to skimmers.
+2. **Structure** — Answer near top; break false balance; uneven lists; one job per section; headings useful to skimmers. For digests: stack news first; Security last if present.
 3. **Specify** — Add only real conditions, numbers, examples. Mark gaps; never fabricate.
 4. **Mechanics** — Transitions, hedges, not-X/Y, participial tails, synonym stacks, tricolons.
 5. **Stance** — Commit. Cut “It’s important to remember…” announcements.
-6. **Voice** — Read aloud (or simulate): does it sound like a person with judgment talking about one thing?
+6. **Voice** — Read aloud (or simulate): does it sound like a person with judgment talking about one thing — warm enough to be human, not a sterile advisory or a hype reel?
 7. **Frontmatter** — Title/description match the body; tags real; draft flag correct.
 
 ---
@@ -320,6 +349,8 @@ Replace with a plain word **or cut the sentence** if nothing concrete remains. D
 - Paste assistant chat tone into the article.
 - Ship `draft: false` with `[need: …]` placeholders still present.
 - Open a digest with counting-as-lede or “put in front of another engineer” framing.
+- Let security advisories dominate a digest’s Top Story / Highlights / lede when stack news exists.
+- Ship digests that sound like CVE bulletins with a thin first-person coat of paint.
 
 ---
 
@@ -345,7 +376,9 @@ Replace with a plain word **or cut the sentence** if nothing concrete remains. D
 - [ ] Ending adds a fact, decision, or real question — not a recap  
 - [ ] No invented specifics  
 - [ ] Nothing left that could sit unchanged on a random corporate blog  
-- [ ] Digest lede (if digest): plain “what mattered this week,” not counting / peer-staging tricks  
+- [ ] Digest lede (if digest): plain “what mattered this week,” not counting / peer-staging / CVE-bulletin tricks  
+- [ ] Digest mix (if digest): stack-first; Security only as optional bottom section and not the main diet  
+- [ ] Digest voice (if digest): warm-natural teammate, not sterile advisory  
 
 ### Publish
 
