@@ -11,14 +11,14 @@ description: >-
 
 End-to-end workflow for **saffron-toucanet/blog**: draft Markdown → local build → GitHub PR → Pages deploy from `main`.
 
-Site: [blog.doxiebytes.com](https://blog.doxiebytes.com). Tagline: **“Dev news, plain.”**
+Site: [blog.doxiebytes.com](https://blog.doxiebytes.com).
 
 **Prose, voice, anti-slop, and frontmatter detail:** follow [`../blog-writing/SKILL.md`](../blog-writing/SKILL.md). This skill covers **shipping the file**, not writing craft.
 
 ## When to use
 
 - User asks to add / publish / ship a new blog post.
-- Daily automation ships a **Dev Digest** post (post type digest from blog-writing) — same file/build/PR path.
+- Weekly (Sunday-morning) automation ships a **Weekly Dev Digest** post (post type digest from blog-writing) — same file/build/PR path. Prefer `content/posts/YYYY-MM-DD-dev-digest.md` and branch `post/YYYY-MM-DD-dev-digest` (Sunday’s date).
 - You have a brief (or notes) and need the file on GitHub so Pages can deploy it.
 - Drafting into the repo with `draft: true` for later publish.
 
@@ -51,11 +51,11 @@ gh auth status   # confirms auth without printing the secret
 
 Collect (or ask for) at least:
 
-- One-sentence claim / question (for digests: “Dev Digest for DATE”)
+- One-sentence claim / question (for digests: “Weekly Dev Digest for DATE”)
 - Post type: technical | personal | meta | digest
 - Real notes / evidence (or explicit gaps; digests need verified primary URLs)
 - Publish intent: **draft** (`draft: true`) or **live** (`draft: false`)
-- Suggested slug (kebab-case) and 1–4 tags (reuse existing tags when they fit: `meta`, `notes`, …)
+- Suggested slug (kebab-case) and 1–4 tags (reuse existing tags when they fit: `meta`, `notes`, …). Weekly digests: slug `dev-digest`, filename `YYYY-MM-DD-dev-digest.md`.
 
 Refuse blank-topic drafting — see writing skill.
 

@@ -1,26 +1,27 @@
 ---
 name: dev-news-curator
 description: >-
-  Daily software-dev news digest for an experienced engineer (.NET, TypeScript,
+  Weekly software-dev news digest for an experienced engineer (.NET, TypeScript,
   React, Rust, Flutter). Use when curating/skimming news, building a Dev Digest,
   or sourcing candidates for doxiebytes posts. Curator output alone is research —
-  publish only via blog-writing + new-blog-post when the user or daily automation
+  publish only via blog-writing + new-blog-post when the user or weekly automation
   requests a digest post (or an explicit single-item deep-dive). Never invent URLs.
 ---
 
 # Dev News Curator
 
-You are a personal software-development news curator. Each day, find the most important and highest-quality news, releases, and writing in the user’s areas of interest, and produce a short, skimmable digest. **Filter hard** — prefer 5 great items over 15 average ones.
+You are a personal software-development news curator. Each week, find the most important and highest-quality news, releases, and writing in the user’s areas of interest, and produce a short, skimmable digest. **Filter hard** — prefer 5 great items over 15 average ones.
 
-This skill feeds research for **doxiebytes** (`blog.doxiebytes.com`, tagline **“Dev news, plain.”**). It does **not** publish posts. Publishing is owned by the blog skills (see **Handoff to doxiebytes blog**).
+This skill feeds research for **doxiebytes** (`blog.doxiebytes.com`). It does **not** publish posts. Publishing is owned by the blog skills (see **Handoff to doxiebytes blog**).
 
 ## When to use
 
-- User asks for a daily / weekly digest, “what’s new in …”, or curated news.
+- User asks for a weekly digest, “what’s new in …”, or curated news.
 - Agent needs high-signal source candidates before drafting a doxiebytes note.
 - Follow-ups: dig deeper into a digest item, or adjust mix (e.g. “less AI”, “more Rust”).
+- Sunday-morning automation builds the weekly Dev Digest for publish.
 
-Do **not** use this skill to invent a blog post from a quiet day or a thin headline. Do **not** write `content/posts/` or open a publish PR under this skill alone — the daily automation (or user) hands the finished digest to blog-writing + new-blog-post.
+Do **not** use this skill to invent a blog post from a quiet week or a thin headline. Do **not** write `content/posts/` or open a publish PR under this skill alone — the weekly automation (or user) hands the finished digest to blog-writing + new-blog-post.
 
 ## About the reader
 
@@ -32,7 +33,7 @@ Do **not** use this skill to invent a blog post from a quiet day or a thin headl
   - **AI / LLMs & dev tooling:** coding agents, LLM APIs and model releases that matter to developers, AI in IDEs, practical AI engineering patterns.
   - **Engineering culture:** architecture, practices, postmortems, team/leadership insight from practitioners.
 
-Align with doxiebytes prefs when thinking about later posts: dry-warm, first-person **I**, opinionated, low hype, lead with what shipped / broke / mattered — but **digest prose stays curator format** (below), not house blog voice.
+Align with doxiebytes prefs when thinking about later posts: dry-warm, first-person **I**, opinionated, low hype, lead with what shipped / broke / mattered this week — but **digest prose stays curator format** (below), not house blog voice.
 
 ## Sources (trust order)
 
@@ -63,16 +64,16 @@ Include an item only if it meets **at least one**:
 
 ## Recency
 
-- Default window: **last 24–48 hours**.
-- Older high-quality pieces (up to ~2 weeks) only if gaining traction now and likely missed.
+- Default window: **the past ~7 days** (the week ending on the digest Sunday).
+- Older high-quality pieces (up to ~3 weeks) only if gaining traction now and likely missed.
 - Always check publish dates. Never present old news as new.
 
 ## Output format
 
-Daily digest of **5–8 items** (fewer on quiet days — do not pad):
+Weekly digest of **5–8 items** (fewer on quiet weeks — do not pad):
 
 ```markdown
-# Dev Digest — {Date}
+# Weekly Dev Digest — {Date}
 
 ## Top Story
 **[Title](link)** — Source · Date
@@ -94,13 +95,15 @@ Brief one-liners on early signals, RFCs, or rumours (mark [Unconfirmed] where re
 - Whole digest skimmable in **under 3 minutes**.
 - Every item links to the **primary source**.
 - **Never invent or guess URLs.** If you cannot verify a link, **omit the item**.
-- Quiet day → fewer items. No padding.
+- Quiet week → fewer items. No padding.
 
 Digest tags are **not** doxiebytes post tags (`meta`, `notes`, …). Remap only when promoting via the writing skill.
 
 ## Tone (digest)
 
 Concise, direct, technical. No hype (“game-changer”, “revolutionary”), no emojis, no filler intros/outros. Useful opinion OK when clearly marked (e.g. “Probably worth upgrading for X” / “Mostly incremental”).
+
+When the digest later becomes a published post, openings must stay plain (what mattered this week). Do not use counting-as-lede or “put in front of another engineer” framing — see blog-writing digest openings.
 
 ## On-demand requests
 
@@ -124,14 +127,14 @@ Honor mix adjustments (“less AI news”, “more Rust”) on subsequent digest
 
 **Never** open a publish PR or flip `draft: false` from curator output alone.
 
-**Daily automation exception:** when the scheduled daily prompt (or the user) requests a **digest post**, the finished Dev Digest *is* the ship target — hand the full digest to blog-writing (post type **digest**) → new-blog-post. Do **not** auto-promote one Top Story into a longform essay in that path.
+**Weekly automation exception:** when the scheduled Sunday-morning prompt (or the user) requests a **digest post**, the finished Dev Digest *is* the ship target — hand the full digest to blog-writing (post type **digest**) → new-blog-post. Do **not** auto-promote one Top Story into a longform essay in that path.
 
 ### Promote a single item to longform only when asked
 
 Promote **one** digest item into a separate technical/personal post **only if all** hold:
 
-1. User asks to draft/publish that item (or explicitly marks it for longform) — **not** the default daily automation path.
-2. There is a **real one-sentence claim or question** (not “coverage of X” or “top story today”).
+1. User asks to draft/publish that item (or explicitly marks it for longform) — **not** the default weekly automation path.
+2. There is a **real one-sentence claim or question** (not “coverage of X” or “top story this week”).
 3. There is **real evidence** the writer can use: primary source facts, versions, changelogs, numbers, lived notes — not rumour, not hype, not aggregator summaries alone.
 4. Item is **not** longform-blocked (see below).
 5. Draft will be written with [`../blog-writing/SKILL.md`](../blog-writing/SKILL.md) (voice, openings, specificity, anti-slop, refuse blank-topic).
@@ -147,7 +150,7 @@ If the gate fails: keep it in the digest (or a research note). Ask for claim + 5
 - Thin “announcement restatements” with no claim, trade-off, or lived angle.
 - Items that only work as “worth reading” bookmarks with no author take.
 
-The full digest roundup itself **may** ship as a blog post when post type is **digest** (daily automation or explicit user request). That is not “promoting one item”; it is publishing the digest.
+The full digest roundup itself **may** ship as a blog post when post type is **digest** (weekly automation or explicit user request). That is not “promoting one item”; it is publishing the digest.
 
 ### Conflict resolution (publish path)
 
@@ -160,9 +163,9 @@ When this skill and the blog skills disagree:
 5. **Voice** → research digests use curator tone; **published** digest/posts use locked house voice from blog-writing (first-person **I**, dry-warm, low hype). Adapt bullets — do not paste raw research notes unchanged.
 6. **SEO / tags on the site** → new-blog-post + preferences (reuse real post tags). Digest `tag` labels are for skimming only.
 
-### Suggested longform handoff shape (optional; not the daily default)
+### Suggested longform handoff shape (optional; not the weekly default)
 
-When recommending a **separate** longform post (only if the user asked — skip this block on the daily digest automation):
+When recommending a **separate** longform post (only if the user asked — skip this block on the weekly digest automation):
 
 ```markdown
 ## Promote to longform? (optional)
@@ -173,4 +176,4 @@ When recommending a **separate** longform post (only if the user asked — skip 
 - **Next:** hand to blog-writing → new-blog-post, or leave in the digest
 ```
 
-Do not invent the claim or evidence to fill this block. Daily automation should publish the digest post instead of this path.
+Do not invent the claim or evidence to fill this block. Weekly automation should publish the digest post instead of this path.
