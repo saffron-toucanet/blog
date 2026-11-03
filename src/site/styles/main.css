@@ -225,16 +225,7 @@ main {
 }
 
 .home main {
-  padding-block-start: var(--space-2);
-}
-
-.site-intro {
-  margin: 0 0 var(--space-6);
-  font-family: var(--font-body);
-  font-size: 1.2rem;
-  line-height: var(--lh-body);
-  color: var(--muted);
-  max-width: 28ch;
+  padding-block-start: var(--space-4);
 }
 
 .section-label {

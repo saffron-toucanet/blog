@@ -1,4 +1,4 @@
-import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "./config.ts";
+import { SITE_TITLE, SITE_URL } from "./config.ts";
 import type { Post } from "./markdown.ts";
 import { absoluteUrl, postPath, tagPath } from "./paths.ts";
 import { escapeXml } from "./xml.ts";
@@ -28,7 +28,7 @@ export function renderRssFeed(posts: Post[]): string {
   const items = sorted
     .map((post) => {
       const link = absoluteUrl(postPath(post.slug));
-      const description = post.description || SITE_DESCRIPTION;
+      const description = post.description || post.title;
       return `    <item>
       <title>${escapeXml(post.title)}</title>
       <link>${escapeXml(link)}</link>
@@ -44,7 +44,7 @@ export function renderRssFeed(posts: Post[]): string {
   <channel>
     <title>${escapeXml(SITE_TITLE)}</title>
     <link>${escapeXml(channelLink)}</link>
-    <description>${escapeXml(SITE_DESCRIPTION)}</description>
+    <description>${escapeXml(SITE_TITLE)}</description>
     <language>en-us</language>
     <atom:link href="${escapeXml(feedSelf)}" rel="self" type="application/rss+xml"/>
     <lastBuildDate>${lastBuildDate(posts)}</lastBuildDate>

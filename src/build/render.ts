@@ -1,4 +1,4 @@
-import { SITE_DESCRIPTION, SITE_TITLE, SITE_URL } from "./config.ts";
+import { SITE_TITLE, SITE_URL } from "./config.ts";
 import { escapeAttr, escapeHtml } from "./html.ts";
 import type { Post } from "./markdown.ts";
 import { tagSlug } from "./markdown.ts";
@@ -57,7 +57,7 @@ function readingMinutes(html: string): number {
 function layout(meta: PageMeta, body: string): string {
   const pageTitle =
     meta.title === SITE_TITLE ? SITE_TITLE : `${meta.title} · ${SITE_TITLE}`;
-  const description = meta.description || SITE_DESCRIPTION;
+  const description = meta.description || SITE_TITLE;
   const canonical = absoluteUrl(meta.canonicalPath);
   const cssHref = withBase("/assets/main.css");
   const themeHref = withBase("/assets/theme.js");
@@ -67,7 +67,7 @@ function layout(meta: PageMeta, body: string): string {
   const faviconHref = withBase("/favicon.svg");
   const ogImagePath = meta.ogImagePath ?? "/images/og-default.svg";
   const ogImage = absoluteUrl(ogImagePath);
-  const ogImageAlt = meta.ogImageAlt ?? `${SITE_TITLE} — ${SITE_DESCRIPTION}`;
+  const ogImageAlt = meta.ogImageAlt ?? SITE_TITLE;
   const serifHref = withBase("/fonts/source-serif-4-latin-wght-normal.woff2");
   const sansHref = withBase("/fonts/source-sans-3-latin-wght-normal.woff2");
   const path = meta.canonicalPath;
@@ -156,7 +156,6 @@ function websiteJsonLd(): Record<string, unknown> {
     "@type": "WebSite",
     name: SITE_TITLE,
     url: absoluteUrl("/"),
-    description: SITE_DESCRIPTION,
     inLanguage: "en",
     publisher: {
       "@type": "Organization",
@@ -177,7 +176,7 @@ function blogPostingJsonLd(post: Post): Record<string, unknown> {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: post.title,
-    description: post.description || SITE_DESCRIPTION,
+    description: post.description || undefined,
     datePublished: post.date,
     mainEntityOfPage: {
       "@type": "WebPage",
@@ -275,17 +274,16 @@ export function renderIndexPage(posts: Post[]): string {
       ? "<p>No posts yet.</p>"
       : `<ul class="post-list">\n${sorted.map(postListItem).join("\n")}\n</ul>`;
 
-  const body = `    <p class="site-intro">${escapeHtml(SITE_DESCRIPTION)}</p>
-    <h1 class="section-label">Posts</h1>
+  const body = `    <h1 class="section-label">Posts</h1>
     ${list}`;
 
   return layout(
     {
       title: SITE_TITLE,
-      description: SITE_DESCRIPTION,
+      description: SITE_TITLE,
       canonicalPath: "/",
       home: true,
-      ogImageAlt: `${SITE_TITLE} — ${SITE_DESCRIPTION}`,
+      ogImageAlt: SITE_TITLE,
       jsonLd: websiteJsonLd(),
     },
     body,
@@ -322,7 +320,7 @@ ${post.bodyHtml}
   return layout(
     {
       title: post.title,
-      description: post.description || SITE_DESCRIPTION,
+      description: post.description || post.title,
       canonicalPath: postPath(post.slug),
       ogType: "article",
       ogImagePath: postOgPath(post.slug),

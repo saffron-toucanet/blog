@@ -1,4 +1,4 @@
-import { SITE_DESCRIPTION, SITE_TITLE } from "./config.ts";
+import { SITE_TITLE } from "./config.ts";
 import { escapeXml } from "./xml.ts";
 
 const OG_WIDTH = 1200;
@@ -50,7 +50,7 @@ function titleFontSize(lines: number): number {
 /** Brand card used for home, tags, and 404. */
 export function renderDefaultOgSvg(): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${OG_WIDTH}" height="${OG_HEIGHT}" viewBox="0 0 ${OG_WIDTH} ${OG_HEIGHT}" role="img" aria-labelledby="title">
-  <title id="title">${escapeXml(`${SITE_TITLE} — ${SITE_DESCRIPTION}`)}</title>
+  <title id="title">${escapeXml(SITE_TITLE)}</title>
   <defs>
     <linearGradient id="paper" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#d5dbe6"/>
@@ -61,9 +61,8 @@ export function renderDefaultOgSvg(): string {
   <rect width="${OG_WIDTH}" height="${OG_HEIGHT}" fill="url(#paper)"/>
   <circle cx="1020" cy="-60" r="340" fill="#c8d0dc" opacity="0.55"/>
   <circle cx="-40" cy="560" r="220" fill="#c5cbd6" opacity="0.35"/>
-  <text x="96" y="250" font-family="Georgia, 'Times New Roman', serif" font-size="104" font-weight="700" fill="#1a1d22">${escapeXml(SITE_TITLE)}</text>
-  <text x="96" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="40" fill="#4a515c">${escapeXml(SITE_DESCRIPTION)}</text>
-  <rect x="96" y="390" width="140" height="18" rx="3" fill="#1c4d89"/>
+  <text x="96" y="280" font-family="Georgia, 'Times New Roman', serif" font-size="104" font-weight="700" fill="#1a1d22">${escapeXml(SITE_TITLE)}</text>
+  <rect x="96" y="330" width="140" height="18" rx="3" fill="#1c4d89"/>
   <text x="96" y="540" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#4a515c">blog.doxiebytes.com</text>
 </svg>
 `;
@@ -87,8 +86,8 @@ export function renderPostOgSvg(input: {
   const desc = (input.description ?? "").trim();
   const descLine =
     desc.length > 0
-      ? escapeXml(desc.length > 90 ? `${desc.slice(0, 87).trimEnd()}…` : desc)
-      : escapeXml(SITE_DESCRIPTION);
+      ? `<text x="96" y="480" font-family="system-ui, -apple-system, sans-serif" font-size="30" fill="#4a515c">${escapeXml(desc.length > 90 ? `${desc.slice(0, 87).trimEnd()}…` : desc)}</text>`
+      : "";
   const meta = [input.date, SITE_TITLE].filter(Boolean).join(" · ");
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${OG_WIDTH}" height="${OG_HEIGHT}" viewBox="0 0 ${OG_WIDTH} ${OG_HEIGHT}" role="img" aria-labelledby="title">
@@ -104,7 +103,7 @@ export function renderPostOgSvg(input: {
   <circle cx="1080" cy="80" r="280" fill="#c8d0dc" opacity="0.45"/>
   <text x="96" y="120" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="600" letter-spacing="0.04em" fill="#1c4d89">${escapeXml(SITE_TITLE.toUpperCase())}</text>
   <text font-family="Georgia, 'Times New Roman', serif" font-size="${size}" font-weight="700" fill="#1a1d22">${titleTspans}</text>
-  <text x="96" y="480" font-family="system-ui, -apple-system, sans-serif" font-size="30" fill="#4a515c">${descLine}</text>
+  ${descLine}
   <rect x="96" y="520" width="96" height="10" rx="2" fill="#1c4d89"/>
   <text x="96" y="570" font-family="system-ui, -apple-system, sans-serif" font-size="26" fill="#4a515c">${escapeXml(meta)}</text>
 </svg>
