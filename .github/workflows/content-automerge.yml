@@ -12,6 +12,9 @@
 # Design: pull_request queues GitHub auto-merge (no self-check deadlock).
 # workflow_run merges after Deploy GitHub Pages succeeds as a fallback when
 # Allow auto-merge is off or no required checks are configured.
+#
+# GH_REPO must be set: jobs do not check out the repo, and without it `gh`
+# fails with "fatal: not a git repository" (queue then falsely skipped).
 name: Content auto-merge
 
 on:
@@ -42,6 +45,7 @@ jobs:
       - name: Queue squash auto-merge when eligible
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           PR: ${{ github.event.pull_request.number }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
           OWNER: ${{ github.repository_owner }}
@@ -66,12 +70,14 @@ jobs:
             exit 0
           fi
 
-          mapfile -t files < <(gh pr diff "$PR" --name-only)
-          if [[ ${#files[@]} -eq 0 ]]; then
+          # Fail loudly if gh cannot list files (do not treat errors as empty).
+          files="$(gh pr diff "$PR" --name-only)"
+          if [[ -z "$files" ]]; then
             echo "Skip: no changed files"
             exit 0
           fi
-          for f in "${files[@]}"; do
+          while IFS= read -r f; do
+            [[ -z "$f" ]] && continue
             case "$f" in
               content|content/*) ;;
               *)
@@ -79,8 +85,8 @@ jobs:
                 exit 0
                 ;;
             esac
-          done
-          echo "Eligible: ${#files[@]} path(s) under content/"
+          done <<< "$files"
+          echo "Eligible: content-only paths under content/"
 
           # --auto returns once merge is queued; GitHub waits for required checks.
           # Never --admin / force. If Allow auto-merge is disabled, workflow_run merges later.
@@ -102,6 +108,7 @@ jobs:
       - name: Squash-merge eligible content PR
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           OWNER: ${{ github.repository_owner }}
           ALLOWLIST_VAR: ${{ vars.CONTENT_AUTOMERGE_AUTHORS }}
@@ -159,12 +166,13 @@ jobs:
             exit 0
           fi
 
-          mapfile -t files < <(gh pr diff "$pr" --name-only)
-          if [[ ${#files[@]} -eq 0 ]]; then
+          files="$(gh pr diff "$pr" --name-only)"
+          if [[ -z "$files" ]]; then
             echo "Skip: no changed files"
             exit 0
           fi
-          for f in "${files[@]}"; do
+          while IFS= read -r f; do
+            [[ -z "$f" ]] && continue
             case "$f" in
               content|content/*) ;;
               *)
@@ -172,7 +180,7 @@ jobs:
                 exit 0
                 ;;
             esac
-          done
+          done <<< "$files"
 
           if [[ "$already_auto" == "true" ]]; then
             echo "PR #$pr already has auto-merge queued; leaving GitHub to finish"
