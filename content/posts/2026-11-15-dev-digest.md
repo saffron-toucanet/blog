@@ -1,0 +1,90 @@
+---
+title: "Weekly Dev Digest — 2026-11-15"
+date: "2026-11-15"
+description: ".NET 11 is the two-year STS release on the day .NET 8 and 9 leave support, Rust 1.100 stabilizes the never type, and Flutter 3.50 points new projects at the standalone Material package."
+draft: false
+tags: [notes]
+slug: dev-digest-2026-11-15
+---
+
+.NET 11 shipped Tuesday, Rust stabilized the never type on Thursday, and Flutter 3.50 is the stable that changes which Material package a new project imports. Node's Wednesday security builds are at the bottom.
+
+## Top Story
+
+**[Announcing .NET 11](https://devblogs.microsoft.com/dotnet/announcing-dotnet-11/)** — .NET Blog · 2026-11-10
+
+.NET 11 is a Standard Term Support release: two years, same servicing rules as an LTS, shorter clock. .NET 10 stays the supported LTS. .NET 8 and .NET 9 reached end of support the same day. For a service I expect to leave alone, I would move it to 10. I would take 11 where I actually want C# 15.
+
+C# 15 is the default language version on `net11.0`. Union types are the part I would try first: a value is one of a declared set of case types, with exhaustiveness in `switch`. The announcement's sample is `public union ProductLookup(Product, ProductNotFound);`. Closed hierarchies are the other shape, when you own the inheritance and want the compiler to see every case. Collection expressions can take constructor arguments with `with(...)`, so a `HashSet` can carry `StringComparer.OrdinalIgnoreCase` without dropping the `[...]` syntax. ASP.NET Core understands unions in JSON bodies for Minimal APIs and MVC, and generated OpenAPI uses `anyOf`. That does not cover route, query, header, or form binding. If two cases share a JSON shape, you configure a classifier. OpenAPI 3.2 is now the default document. I would pin an earlier version before I upgraded a repo whose client generator does not read 3.2 yet.
+
+Runtime Async is still preview. The runtime libraries are built with it; your code is not, unless you set `<Features>runtime-async=on</Features>` on a `net11.0` project. You do not need `EnablePreviewFeatures` for that. The announcement points at Stephen Toub's [performance tour](https://devblogs.microsoft.com/dotnet/performance-improvements-in-net-11/) from 15 September for the measurements. His note on this switch: the .NET 11 goal is parity with .NET 10, some paths are already as good or better, and some still produce less efficient code. I would opt in on a branch and measure before I shipped it.
+
+A few upgrade traps from the same post. EF Core 11 requires .NET 11, and the SQL Server vector index APIs are experimental. .NET MAUI's default runtime is CoreCLR, and the `Microsoft.Maui.Controls.Compatibility` package no longer ships. NuGet can wait out a minimum package publication age before a new version is eligible. The announcement treats that as an extra policy control, alongside reviewing dependencies. Installing the SDK does not retarget an existing app, and the breaking-changes list includes updated minimum CPU requirements. Read that list before you bump `global.json`.
+
+## Highlights
+
+1. **[Rust 1.100.0](https://blog.rust-lang.org/2026/11/12/Rust-1.100.0/)** — Rust Blog · 2026-11-12 · `Rust`
+   The never type, `!`, is stable after ten years and five failed attempts. You can name it anywhere, not only as a function return. `Infallible` is now an alias of `!`. The cost is the never-type fallback: editions 2015, 2018, and 2021 now fall back to `!` instead of `()`, which 2024 already did. Mostly invisible, and it can bite code that ignores the result of a function returning a generic parameter. The release team says they shipped fixes to public crates ahead of this. If a dependency breaks on the upgrade, update it before you rewrite your own code.
+
+   `Allocator` is stable for `Vec` and `Box`. That is the core of `allocator_api`, not the rest of the collections. `DropGuard` runs a closure on every exit path, including `?` and panic, and `DropGuard::dismiss` is an associated function so it does not collide with methods on the inner value. Cargo warns about unused dependencies when you build every target that might use them. A `cargo check --bin foo` will not tell you a dependency is unused if another bin might still need it, and `dev-dependencies` stay quiet. The build directory now puts the configuration hash on the parent directory instead of the filename. The post calls that internal and still says it can break scripts and tests that worked around the old layout. It points at cargo#17287 for those.
+
+   Dependency cooldowns are opt-in. `[registry] global-min-publish-age = "3 days"` makes `cargo update` skip versions newer than that, and it prints what it held back. `cargo install` ignores the setting. Versions with no `pubtime` in the index are never held back. I would turn three days on for a workspace I update by hand. I would not treat it as the whole supply-chain story.
+
+   The [2 October note](https://blog.rust-lang.org/2026/10/02/demoting-i686-windows-targets-to-std-only/) scheduled the 32-bit Windows host-tools drop for this release. The [stable platform page](https://doc.rust-lang.org/stable/rustc/platform-support/windows-msvc.html) now lists `i686-pc-windows-msvc` as Tier 1 without host tools, and says only the 64-bit MSVC targets ship host tools. Standard library builds for 32-bit Windows are still there. You cross-compile them from a 64-bit host. You do not install the toolchain on a 32-bit Windows machine.
+
+2. **[What's new in Flutter 3.50](https://flutter.dev/blog/whats-new-in-flutter-3-50)** — Flutter · 2026-11-11 · `Flutter`
+   Direct native interop is stable: FFIgen for Objective-C, next to the C support it already had, and JNIgen for Java and Kotlin. Pigeon's native interop mode is still a preview. New projects from `flutter create` import `package:material_ui`. The coupled `package:flutter/material.dart` and `package:flutter/cupertino.dart` libraries are deprecated, along with their localization delegates. `dart fix --apply --code=migrate_design_widgets` rewrites those imports.
+
+   Two host warnings I would not ignore. Disabling Swift Package Manager now warns on every Flutter CLI command. The CocoaPods trunk goes read-only in December 2026, and the fallback is on the way out. The CLI also warns once when you build on an Intel Mac. A later release drops Intel Mac hosts, so iOS, macOS, and Android builds will want Apple Silicon. `flutter config --enable-macos-arm64-only` is available before that becomes the default.
+
+   WebAssembly on Safari 26.2+ and Firefox 147+ is opt-in through `wasmAllowList` in `web/flutter_bootstrap.js`. They measured over 2× the JavaScript frame rate on heavy widget benchmarks. Chromium already runs Wasm by default. I would opt in on a web app I can test in Safari. I would not assume the fallback is gone.
+
+   Release Android builds ignore `route`, `dart_entrypoint`, and `cached_engine_id` from external `Intent` extras, and they reject runtime engine flags such as `--dart-flags` supplied that way. Debug builds log the ignored extras. Deep links stay. I would retest any app that was stuffing a route in from another app.
+
+3. **[Announcing Dart 3.14](https://dart.dev/blog/announcing-dart-3-14)** — Dart · 2026-11-11 · `Flutter`
+   No new language features. The soundness fix I would actually run the analyzer for: a subpattern in a list, map, or record pattern no longer promotes the whole matched property to the subpattern's type. The [language evolution note](https://dart.dev/resources/language/evolution) is the short version. `dart migrate` walks a package forward one SDK version at a time. It applies the `dart fix` changes that have to land before the bump, then raises the lower bound in `pubspec.yaml`. Cleanup that adopts the new style is optional after that. It supports packages whose minimum SDK is already Dart 3.0 or later.
+
+   `dart:html`, `dart:js`, `dart:js_util`, and `package:js` are deprecated in favor of `dart:js_interop` and `package:web`. The legacy libraries are scheduled to go away in a future Dart release. `flutter build web --no-deprecated-js-interop` fails the build if an app or a package still imports them. On Wasm, Modestas Valauskas's `Int32x4` / `Float32x4` / `Float64x2` work compiles to hardware `v128` instructions. The post's figure is up to 4× on their SIMD benchmarks. That number is theirs.
+
+4. **[pnpm 12.21.0](https://pnpm.io/blog/releases/12.21.0)** — pnpm · 2026-11-13 · `Web`
+   This is the 12.x I would install. It sits on top of [12.19.0](https://pnpm.io/blog/releases/12.19.0) (10 November) and 12.20.0 (12 November). The behavior I would read before a workspace upgrade is peers and engines, not `pnpm fund`.
+
+   From 12.19: `projectScopedOptionalPeers: true` means a project only receives a missing optional peer when its own dependencies install one. Another workspace project's `devDependencies` no longer fill it in. Separately, with `dedupePeerDependents: false`, a missing optional peer is no longer taken from a version only some other project depends on. `pnpm install` now checks `engines`, `os`, `cpu`, and `libc` on every workspace project, root included. An incompatible `engines.pnpm` fails the command. An incompatible `engines.node` warns, and fails if `engineStrict` is on. A `${VAR}` placeholder in a registry URL in `pnpm-workspace.yaml` or the project `.npmrc` now fails the command instead of quietly resolving from another registry. pnpm does not expand environment variables in those files. An offline install error for a missing tarball no longer prints the credentials in the URL.
+
+   `lockfile.format: v13` is experimental. The file is still YAML, with one `packages` entry per version and peer versions as properties, so a peer bump touches fewer lines. 12.21 fixes several v13 failures: lockfile keys longer than 1,024 characters, packages that declare many peers, and `pnpm deploy` with injected workspace packages. I would not commit a v13 lockfile on a repo other people install until that format leaves experimental. Two days of follow-up fixes is the reason.
+
+   12.21 also stops repeat installs from swapping the peer provider the previous install chose. An explicit `pnpm add` or `pnpm update` still wins. `pnpm store add` in a project prepares tarball and git dependencies that the lockfile already pins, so `pnpm install --offline --frozen-lockfile` can install those afterwards. And `pnpm pipeline` rebuilds local packages after it restores a shared Cargo build cache when Cargo is 1.100 or newer. Before that, a worktree could reuse another worktree's build-script output.
+
+5. **[Next.js 16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6)** — Next.js · 2026-11-09 · `React`
+   A bugfix backport, and the note says it does not include everything pending on canary. Route handler responses are compressed automatically when they are not already compressed. Turbopack's dev GC picks up fixes. `create-next-app` pins Tailwind at 4.3.3. This is not 16.4.5, last week's security release. I would take 16.4.6 on a 16.4 app. I would watch the first deploy in case a route handler was depending on an uncompressed body.
+
+6. **[React Native 0.89.0-rc.1](https://github.com/react/react-native/releases/tag/v0.89.0-rc.1)** — React Native · 2026-11-10 · `React`
+   `[Update]` Follow-up to last week's rc.0. The fix I would care about in a monorepo: Metro's transform cache can be shared across checkouts because `asyncRequireModulePath` points at `metro:runtime/modules/asyncRequire` instead of an absolute path. DevTools can inspect WebSocket events in the Network panel, and framework sockets such as Fast Refresh no longer show up as if the app opened them. Android fixes an `addViewAt` crash when a view a parent still holds with `startViewTransition` is inserted into another parent. I would keep this on a branch. The community CLI dependency from rc.0 is still the break I would grep for before I treated the line as stable.
+
+7. **[Vite 8.3.8](https://github.com/vitejs/vite/releases/tag/v8.3.8)** — Vite · 2026-11-11 · `Web`
+   Small patch, one build break. A CSS file used as an entry is now rejected when `build.cssCodeSplit` is `false`. Sass is imported once per build instead of once per file. The same notes add, then revert, keeping `magicString` and `ast` on transform-hook meta, so that keep is not in the release I would install. If a production build uses a CSS entry with code splitting off, I would expect it to fail until the entry changes.
+
+8. **[Actions ARM32 retirement](https://github.blog/changelog/2026-11-12-actions-for-arm32-linux-windows-retirement/)** — GitHub Changelog · 2026-11-12 · `Web`
+   Hosted runners stop ARM32 job execution on Linux and Windows by 8 December 2026. The note ties that to Node 24, which does not support ARM32, after node20 went out of support. Native AArch32 user-space on those hosted runners goes with it. If a workflow still says `linux/arm/v7` or a 32-bit Windows runner, I would move it before that date. I would not wait for the job to start failing in December.
+
+9. **[Copilot model deprecations, 14 December](https://github.blog/changelog/2026-11-13-upcoming-deprecation-of-selected-github-copilot-models-in-december/)** — GitHub Changelog · 2026-11-13 · `AI/Tooling`
+   These leave every Copilot surface on 14 December: Claude Fable 5 (use Fable 5.2), Claude Haiku 4.5 (use Haiku 5.5), Gemini 3.8 Flash (use Gemini 4 Hydrogen), Gemini 4 Argon (use Gemini 4 Carbon), Grok 4.6 (use Grok 4.7). Kimi K3's replacement is still "to be announced." Haiku 4.5 stays for individual subscribers on annual plans. If an enterprise turned off the global default for new models, the replacements are not on until someone enables the policy. I would check pinned model names in CLI configs and agent workflows before the 14th.
+
+   Fable 5.2 itself landed [9 November](https://github.blog/changelog/2026-11-09-claude-fable-5-2-in-github-copilot/). Business and Enterprise policies for it are off by default. Using it retains prompts and outputs at Anthropic for safety classifiers, and that data is not used for training. Other Claude models, aside from Fable 5, 5.1, and 5.2, stay on zero data retention. Eligible enterprises can get a zero-data-retention exception through the end of the calendar year by talking to their account team. GitHub Support cannot turn that on. I would not enable the org policy until someone has actually read that paragraph.
+
+10. **[Dependabot alerts pause on inactive repositories](https://github.blog/changelog/2026-11-10-dependabot-alerts-will-pause-on-inactive-repositories/)** — GitHub Changelog · 2026-11-10 · `Web`
+    Starting 8 December, Dependabot alerts turn off on most github.com repositories with no activity in the past year. Activity means a push to any branch or tag, creating the repo, or turning the alerts on. Existing alerts are archived, not deleted. Any later push turns them back on and restores the archive. GitHub leaves alerts alone when an enforced security configuration enables them, and when an enterprise policy does not let repository admins toggle them. GitHub Enterprise Server is out of scope. I would push, or re-enable alerts, on any quiet repo I still ship from. I would not assume a year of silence means the dependency tree is fine.
+
+## Security
+
+1. **[Wednesday, November 11, 2026 security releases](https://nodejs.org/en/blog/vulnerability/november-2026-security-releases)** — Node.js · 2026-11-11 · `Security`
+   `[Update]` Last week's advance notice is the release. The builds are [26.13.1](https://nodejs.org/en/blog/release/v26.13.1), [24.22.3](https://nodejs.org/en/blog/release/v24.22.3), and [22.23.5](https://nodejs.org/en/blog/release/v22.23.5). Highest severity named for each line is high. The HTTP/2 abort they describe for 24 and 26 is a normal-looking server: the handler responds before the body ends, and a client can take the process down. The HTTPS issue on all three lines needs a handler that calls `flushHeaders()` before the body ends and later `end()`s a non-empty chunk. Cleartext `node:http` is out of that HTTPS bug. I would install 26.13.1, 24.22.3, or 22.23.5 for the line I already run. The 22 build is still the one I would take there: the HTTPS issue is on that line even though the HTTP/2 abort above is called out for 24 and 26.
+
+2. **[.NET November 2026 servicing](https://devblogs.microsoft.com/dotnet/dotnet-and-dotnet-framework-november-2026-servicing-updates/)** — .NET Blog · 2026-11-10 · `Security`
+   Same day as the GA. The builds in that post are 11.0.0 (SDK 11.0.100), 10.0.15, 9.0.23, and 8.0.34. Two of the fixes are not "install the runtime and walk away." `System.Formats.Cbor` is a separate package, and on the .NET 9 line the fixed package is 9.0.24, not 9.0.23. ASP.NET Core Identity scaffolding and templates on 8, 9, and 10 need the generated app corrected, rebuilt, and redeployed. A runtime update does not rewrite code you already generated. The post is a long CVE table. Those two exceptions are the part I would check by hand.
+
+## On the Radar
+
+**[TypeScript 7.1 RC](https://github.com/microsoft/TypeScript/issues/63703)** — `[Update]` The iteration plan still lists an RC on 10 November and stable on 24 November. The plan issue has not been updated since the 20 October beta comment, and the [releases page](https://github.com/microsoft/TypeScript/releases) still tops out at the 7.1 beta from that day. I would not book a migration for the 24th until they tag an RC.
+
+**[`pull_request_target` brownout](https://github.blog/changelog/2026-11-02-pull_request_target-blocked-by-default-december-2/)** — `[Update]` Tomorrow, 16 November, 16:00–18:00 UTC, is the second brownout. Public repositories: `pull_request_target` runs the default rule would block fail for those two hours, then go back to evaluate mode. Permanent default block is still 2 December. Private and internal repositories are not in it. The 9 November window already happened. If Insights still shows a workflow you need, allow that file in an Actions event policy before the window, or leave it blocked on purpose.
